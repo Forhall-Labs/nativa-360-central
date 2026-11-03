@@ -1,25 +1,30 @@
-name: Sync a repos individuales
+name: Sync y deploy
 
-# Cada push a dev/stage/main del central (o sea, cada PR mergeado) publica
-# el contenido de cada carpeta en la misma rama de su repo individual, con
-# `git subtree split`. El split es determinístico: reproduce los commits
-# originales con los mismos SHA, así que el push siempre es fast-forward y
-# nunca se reescribe historial. Si alguien commiteó directo en un repo
-# individual, el push se rechaza (non-fast-forward) y el job falla — nunca
-# se fuerza.
+# Trunk-based: cada merge a main del central publica cada carpeta en el main
+# de su repo individual (`git subtree split`) y dispara allá el deploy al
+# ambiente que diga deploy-flags.json ("dev" o "prod").
+#
+# El split es determinístico (reproduce los commits originales con los mismos
+# SHA), así que el push siempre es fast-forward y nunca se reescribe
+# historial. Si alguien commiteó directo en un repo individual, el push se
+# rechaza y el job falla — nunca se fuerza.
+#
+# Se despliega un proyecto cuando su código cambió o cuando cambió su flag
+# (pasar "dev" → "prod" sin tocar código promueve lo que ya está en main).
+# Correrlo a mano (Run workflow) despliega los 4 según sus flags.
 #
 # Requiere el secret SYNC_TOKEN: fine-grained PAT de un admin de la org
 # (resource owner Forhall-Labs) con acceso a los 4 repos y permisos
-# Contents: Read and write + Workflows: Read and write. Tiene que ser de un
-# admin porque las ramas protegidas de los repos individuales piden PR y
-# solo los admins las saltan (enforce_admins está apagado).
+# Contents, Workflows y Actions en Read and write. Tiene que ser de un admin
+# porque main de los repos individuales está protegido y solo los admins lo
+# saltan (enforce_admins está apagado).
 on:
   push:
-    branches: [dev, stage, main]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: sync-${{ github.ref }}
+  group: sync-main
   cancel-in-progress: false
 
 permissions:
@@ -33,14 +38,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { dir: admin, repo: nativa-360-admin, branches: "dev stage main" }
-          - { dir: backend, repo: nativa-360-backend, branches: "dev main" }
-          - { dir: e-com, repo: nativa-360-e-com, branches: "dev stage main" }
-          - {
-              dir: landing,
-              repo: nativa-360-lading,
-              branches: "dev stage main",
-            }
+          - { dir: admin, repo: nativa-360-admin, workflow: ci-cd.yml }
+          - { dir: backend, repo: nativa-360-backend, workflow: ci.yml }
+          - { dir: e-com, repo: nativa-360-e-com, workflow: ci-cd.yml }
+          - { dir: landing, repo: nativa-360-lading, workflow: ci-cd.yml }
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -50,27 +51,44 @@ jobs:
           # SYNC_TOKEN al pushear al otro repo.
           persist-credentials: false
 
-      - name: Split y push
+      - name: Split, push y deploy
         env:
           SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
           DIR: ${{ matrix.dir }}
           REPO: ${{ matrix.repo }}
-          BRANCHES: ${{ matrix.branches }}
-          BRANCH: ${{ github.ref_name }}
+          WORKFLOW: ${{ matrix.workflow }}
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          case " $BRANCHES " in
-            *" $BRANCH "*) ;;
-            *) echo "$REPO no usa la rama $BRANCH — nada que sincronizar."; exit 0 ;;
-          esac
           if [ -z "$SYNC_TOKEN" ]; then
             echo "::error::Falta el secret SYNC_TOKEN (ver comentario al inicio de sync.yml)."
             exit 1
           fi
-          sha=$(git subtree split --prefix="$DIR" HEAD)
+
+          target=$(jq -r --arg p "$DIR" '.[$p] // empty' deploy-flags.json)
+          case "$target" in
+            dev|prod) ;;
+            *) echo "::error::deploy-flags.json: \"$DIR\" tiene que ser \"dev\" o \"prod\" (tiene \"$target\")."; exit 1 ;;
+          esac
+          previous_target=$(git show "$BEFORE:deploy-flags.json" 2>/dev/null \
+            | jq -r --arg p "$DIR" '.[$p] // empty' 2>/dev/null || true)
+
           remote="https://x-access-token:${SYNC_TOKEN}@github.com/Forhall-Labs/${REPO}.git"
-          if ! git push "$remote" "$sha:refs/heads/$BRANCH"; then
-            echo "::error::Push rechazado en $REPO@$BRANCH. Si es non-fast-forward, alguien commiteó directo en el repo individual: traé ese cambio al central con 'git subtree pull --prefix=$DIR https://github.com/Forhall-Labs/$REPO.git $BRANCH' y volvé a correr este workflow."
+          sha=$(git subtree split --prefix="$DIR" HEAD)
+          remote_sha=$(git ls-remote "$remote" refs/heads/main | cut -f1)
+
+          if ! git push "$remote" "$sha:refs/heads/main"; then
+            echo "::error::Push rechazado en $REPO@main. Si es non-fast-forward, alguien commiteó directo en el repo individual: traé ese cambio al central con 'git subtree pull --prefix=$DIR https://github.com/Forhall-Labs/$REPO.git main' (en un PR) y volvé a correr este workflow."
             exit 1
           fi
-          echo "### $DIR → $REPO@$BRANCH: \`$sha\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "### $DIR → $REPO@main: \`$sha\`" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$EVENT" != "workflow_dispatch" ] && [ "$sha" = "$remote_sha" ] && [ "$target" = "$previous_target" ]; then
+            echo "Sin cambios de código ni de flag en $DIR — no se despliega."
+            exit 0
+          fi
+          gh workflow run "$WORKFLOW" --repo "Forhall-Labs/$REPO" --ref main \
+            -f target="$target" -f sha="$sha"
+          echo "Deploy a **$target** disparado: https://github.com/Forhall-Labs/$REPO/actions/workflows/$WORKFLOW" >> "$GITHUB_STEP_SUMMARY"

@@ -1,12 +1,16 @@
 name: CI
 
-# Corre en cada PR los mismos checks que cada repo individual, solo para
-# las carpetas que el PR toca. El job "CI ok" es el único que hay que
-# marcar como required en la protección de ramas: queda verde si todo lo
-# que corrió pasó (o si no había nada que correr).
+# Quality gates de cada PR contra main (trunk-based: es la única rama). Los
+# checks requeridos en la protección de main son "CI ok" y "PR score":
+#
+# - checks: los checks de cada proyecto que el PR toca (format, spell, lint,
+#   tests con cobertura, build; en backend además audit, e2e y Docker).
+# - snyk: dependencias, código y la imagen del backend.
+# - PR score: nota de 0 a 100 con SonarQube Cloud + cobertura de las líneas
+#   cambiadas (scripts/pr-score/, docs/PR_SCORE.md). Mínimo 80.
 on:
   pull_request:
-    branches: [dev, stage, main]
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -26,8 +30,19 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Diff contra la rama destino
+      - name: Validar deploy-flags.json
+        run: |
+          jq -e '
+            (keys | sort) == ["admin", "backend", "e-com", "landing"] and
+            all(.[]; . == "dev" or . == "prod")
+          ' deploy-flags.json > /dev/null || {
+            echo "::error::deploy-flags.json debe tener exactamente admin, backend, e-com y landing, cada uno con \"dev\" o \"prod\"."
+            exit 1
+          }
+
+      - name: Diff contra main
         id: diff
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
@@ -56,6 +71,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -80,8 +97,16 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Test
-        run: npm test
+      - name: Tests con cobertura
+        run: npm run test:cov
+
+      - name: Subir cobertura para el PR score
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.project }}
+          path: ${{ matrix.project }}/coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 3
 
       - name: Build (includes type-check)
         run: npm run build
@@ -104,9 +129,55 @@ jobs:
           push: false
           tags: nativa-360-backend:ci
 
+  snyk:
+    name: Snyk (${{ matrix.scan }})
+    # Se activa con la variable de repo SNYK_ENABLED=true y el secret
+    # SNYK_TOKEN. Los PRs desde forks no tienen el secret: se saltan.
+    if: >-
+      vars.SNYK_ENABLED == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scan: [dependencies, code, container]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@11b673cfb4b0dc0d860a1323caa199d54950dcce
+        with:
+          snyk-version: v1.1308.2
+
+      - name: Scan dependencies (package-lock.json de los 4 proyectos)
+        if: matrix.scan == 'dependencies'
+        run: snyk test --all-projects --severity-threshold=medium
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Scan source code
+        if: matrix.scan == 'code'
+        run: snyk code test --severity-threshold=medium
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Build backend runtime image
+        if: matrix.scan == 'container'
+        run: docker build --tag nativa-360-backend:ci backend
+
+      - name: Scan backend runtime image
+        if: matrix.scan == 'container'
+        run: snyk container test nativa-360-backend:ci --file=backend/Dockerfile --severity-threshold=medium
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
   ci-ok:
     name: CI ok
-    needs: [changes, checks]
+    needs: [changes, checks, snyk]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -118,3 +189,53 @@ jobs:
           case " $RESULTS " in
             *" failure "*|*" cancelled "*) exit 1 ;;
           esac
+
+  pr-score:
+    name: PR score
+    needs: [changes, checks, snyk]
+    # always(): si un job previo falla, este igual corre y falla con el
+    # motivo — un check requerido "skipped" contaría como aprobado.
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: read
+      statuses: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # El diff contra main necesita el historial de ambos lados.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+
+      - name: Test the score calculation
+        run: node --test scripts/pr-score/score.test.mjs
+
+      - name: Descargar cobertura de los proyectos tocados
+        if: needs.checks.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage-reports
+
+      - name: Compute and publish the score
+        run: node scripts/pr-score/index.mjs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          COVERAGE_DIR: coverage-reports
+          NEEDS: ${{ toJSON(needs) }}
+          # Checks externos a este workflow que también tienen que pasar.
+          REQUIRED_CHECKS: |
+            SonarCloud Code Analysis

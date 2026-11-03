@@ -6,10 +6,6 @@
 
 <!-- admin · backend · e-com · landing — borrar los que no aplican. -->
 
-## Rama destino
-
-<!-- dev (integración) · stage (QA) · main (producción) — borrar las que no aplican. -->
-
 ## Issue relacionado
 
 <!-- "Closes #123" (o "Closes Forhall-Labs/nativa-360-admin#123" si el issue vive en
@@ -28,6 +24,8 @@ Closes #
 
 ## Checklist
 
+- [ ] La rama sale de `main` actualizado y el PR es chico (trunk-based)
+- [ ] Si cambié `deploy-flags.json`, el PR lo dice en el resumen
 - [ ] Corrí `npm run format:check`, `npm run lint`, `npm run spell`, `npm run build` y `npm test` en local, en cada proyecto que toqué, sin errores
 - [ ] Probé el flujo en el navegador (no solo tipos/tests) si el cambio toca UI
 - [ ] Actualicé `AGENTS.md` si el cambio resuelve o agrega algo a la sección TODO

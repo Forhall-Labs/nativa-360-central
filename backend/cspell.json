@@ -51,7 +51,8 @@
     "usás",
     "linkear",
     "PVTSSF",
-    "zhhg"
+    "zhhg",
+    "SonarQube"
   ],
   "ignorePaths": [
     "node_modules",

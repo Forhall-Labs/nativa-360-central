@@ -1,31 +1,24 @@
 # Flujo de trabajo
 
-Tres ramas — cada una con su propio deploy en Vercel:
+Este proyecto vive en la carpeta de su nombre dentro de
+[nativa-360-central](https://github.com/Forhall-Labs/nativa-360-central), que
+usa **trunk-based development**: una sola rama, `main`. Ahí se abren los PRs y
+corren los quality gates. Este repo es una copia que se actualiza sola al
+mergear; **no se abren PRs ni se pushea acá**. El flujo completo está en el
+[`AGENTS.md` del central](https://github.com/Forhall-Labs/nativa-360-central/blob/main/AGENTS.md).
 
-| Rama    | Target Vercel | Qué es                                    |
-| ------- | ------------- | ----------------------------------------- |
-| `dev`   | Preview       | Integración diaria, sin revisión de QA    |
-| `stage` | Preview       | QA — lo que se prueba antes de producción |
-| `main`  | Production    | Lo que ven los usuarios reales            |
-
-1. Rama nueva desde `dev`, linkeada al issue (aparece en el panel
-   "Development" del issue y se cierra solo al mergear el PR):
-   `gh issue develop <número> --checkout --base dev`. Si no usás `gh`, se
-   puede linkear a mano con el botón "Create a branch" del issue, o
-   simplemente escribiendo `Closes #<número>` en el PR (ver el template).
-2. Al commitear, un hook de pre-commit (husky + lint-staged) corre Prettier,
-   ESLint y cspell sobre los archivos modificados — si algo no pasa, el
-   commit se cancela y hay que corregirlo antes de reintentar.
-3. PR contra `dev` (se completa solo con el template de
-   `.github/pull_request_template.md`). GitHub Actions corre `format:check`,
-   `spell`, `lint`, `test` y `build` — tiene que quedar en verde antes de
-   mergear. Al mergear, el push a `dev` dispara un deploy Preview.
-4. Cuando `dev` está estable, PR de `dev` → `stage`. Al mergear, otro deploy
-   Preview — ahí es donde QA prueba antes de dejarlo pasar.
-5. Una vez aprobado en `stage`, PR de `stage` → `main`. Al mergear, deploy
-   automático a producción.
-
-Merge siempre por **squash**; la rama de origen se borra sola.
+1. En el central, rama corta desde `main` (`feat/…`, `fix/…`, `chore/…`) y
+   linkeada al issue con `Closes Forhall-Labs/<repo>#<número>` en el PR.
+2. Al commitear, el hook de pre-commit del central (`.githooks/pre-commit`)
+   corre el lint-staged de este proyecto (Prettier, ESLint y cspell sobre lo
+   staged). Si algo no pasa, el commit se cancela.
+3. PR contra `main`. Tienen que pasar **CI ok** (format, spell, lint, tests
+   con cobertura, build, Snyk) y **PR score** (SonarQube Cloud + cobertura de
+   las líneas cambiadas, mínimo 80). Merge por **squash**.
+4. Al mergear, el central pushea esta carpeta al `main` de este repo y
+   dispara `.github/workflows/ci-cd.yml`: repite los checks y despliega al
+   ambiente que diga `deploy-flags.json` del central (`dev` → Vercel
+   Preview, `prod` → Production).
 
 ## Antes de abrir el PR
 
@@ -38,13 +31,7 @@ npm run build
 ```
 
 Si alguno falla, `npm run format` corrige lo que se pueda automáticamente.
-
-## Notas sobre el deploy
-
-`.github/workflows/ci-cd.yml` tiene un solo workflow con dos jobs: `checks`
-(siempre) y `deploy` (`needs: checks`, solo en push a `dev`/`stage`/`main`)
-— así un build roto nunca llega a ningún ambiente. `main` deploya con
-`--target=production`; `dev`/`stage` con `--target=preview`.
+`npm run test:cov` corre los tests con la cobertura que usa el PR score.
 
 ## Estado del proyecto
 

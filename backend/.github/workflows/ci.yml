@@ -1,14 +1,31 @@
 name: CI
 
+# Este repo se actualiza desde Forhall-Labs/nativa-360-central (trunk-based:
+# solo main). No recibe PRs ni pushes directos: el sync del central pushea a
+# main y dispara este workflow con el ambiente que diga el feature flag
+# deploy-flags.json del central — dev → servicio develop de Render, prod →
+# producción. Los quality gates (CI, Snyk, SonarQube Cloud, PR score) corren
+# en los PRs del central; acá se repiten los checks como última barrera
+# antes del deploy, que solo corre si pasan.
 on:
-  pull_request:
-    branches: [main, dev]
-  push:
-    branches: [main, dev]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Ambiente destino
+        type: choice
+        options: [dev, prod]
+        required: true
+      sha:
+        description: Commit de main a desplegar
+        type: string
+        required: true
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-${{ inputs.target }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   checks:
@@ -17,6 +34,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -54,6 +74,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
 
       - name: Build image
         uses: docker/build-push-action@v6
@@ -61,3 +84,22 @@ jobs:
           context: .
           push: false
           tags: nativa-360-backend:ci
+
+  deploy:
+    name: Deploy (${{ inputs.target }})
+    needs: [checks, docker]
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target == 'prod' && 'production' || 'develop' }}
+    steps:
+      # El deploy hook hace que Render construya el último commit de la rama
+      # que tiene configurada el servicio: los dos servicios (develop y
+      # producción) tienen que apuntar a main.
+      - name: Trigger Render deploy hook
+        env:
+          HOOK_URL: ${{ inputs.target == 'prod' && secrets.RENDER_DEPLOY_HOOK_URL_PRODUCTION || secrets.RENDER_DEPLOY_HOOK_URL_DEVELOP }}
+        run: |
+          if [ -z "$HOOK_URL" ]; then
+            echo "::warning::Secret del deploy hook de Render para ${{ inputs.target }} no configurado — se salta el deploy. Configurar RENDER_DEPLOY_HOOK_URL_PRODUCTION (prod) o RENDER_DEPLOY_HOOK_URL_DEVELOP (dev) en Settings -> Secrets and variables -> Actions, con la URL de Render Dashboard -> servicio -> Settings -> Deploy Hook."
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK_URL"

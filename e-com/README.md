@@ -27,9 +27,10 @@ Abrí [http://localhost:3000](http://localhost:3000).
 
 ## CI/CD
 
-Tres ramas, tres ambientes en Vercel: `dev` → preview, `stage` → preview
-(QA), `main` → producción. Cada Pull Request corre `format:check`, `spell`,
-`lint`, `test` y `build` vía GitHub Actions; cada push a esas ramas, si los
-checks pasan, además dispara el deploy al ambiente correspondiente
-(`.github/workflows/ci-cd.yml`). Ver `CONTRIBUTING.md` para el flujo
-completo.
+Trunk-based: el código se trabaja en la carpeta de este proyecto dentro de
+[nativa-360-central](https://github.com/Forhall-Labs/nativa-360-central), donde
+cada PR contra `main` pasa por los quality gates (CI, Snyk, SonarQube Cloud y
+PR score). Al mergear, el central pushea a `main` de este repo y dispara
+`.github/workflows/ci-cd.yml`, que repite los checks y despliega a Vercel
+Preview (`dev`) o Production (`prod`) según el feature flag
+`deploy-flags.json` del central. Ver `CONTRIBUTING.md`.
