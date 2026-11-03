@@ -3,7 +3,7 @@
 FROM node:24-trixie-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 FROM node:24-trixie-slim AS build
 WORKDIR /app
@@ -17,7 +17,7 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json .npmrc ./
 # npm y corepack no se usan en runtime (CMD es node) y traen sus propias
 # dependencias vulnerables (Snyk container): se borran tras instalar.
-RUN npm ci --omit=dev && npm cache clean --force \
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force \
  && rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 COPY --from=build --chown=node:node /app/dist ./dist
 USER node
