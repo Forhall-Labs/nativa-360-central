@@ -1,0 +1,23 @@
+name: Feature request
+description: Proponer algo nuevo o un cambio de comportamiento.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: ¿Qué problema resuelve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Propuesta
+    validations:
+      required: true
+  - type: input
+    id: hu
+    attributes:
+      label: HU relacionada
+      placeholder: "Ej: HU-3.1 — o 'N/A'"
+    validations:
+      required: false
