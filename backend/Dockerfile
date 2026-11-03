@@ -1,21 +1,24 @@
 # syntax=docker/dockerfile:1
 
-FROM node:24-slim AS deps
+FROM node:24-trixie-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci
 
-FROM node:24-slim AS build
+FROM node:24-trixie-slim AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-FROM node:24-slim AS runtime
+FROM node:24-trixie-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json package-lock.json .npmrc ./
-RUN npm ci --omit=dev && npm cache clean --force
+# npm y corepack no se usan en runtime (CMD es node) y traen sus propias
+# dependencias vulnerables (Snyk container): se borran tras instalar.
+RUN npm ci --omit=dev && npm cache clean --force \
+ && rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 COPY --from=build --chown=node:node /app/dist ./dist
 USER node
 EXPOSE 3000

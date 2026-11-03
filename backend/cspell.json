@@ -52,7 +52,9 @@
     "linkear",
     "PVTSSF",
     "zhhg",
-    "SonarQube"
+    "SonarQube",
+    "trixie",
+    "corepack"
   ],
   "ignorePaths": [
     "node_modules",
