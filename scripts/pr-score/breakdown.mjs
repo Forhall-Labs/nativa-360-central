@@ -54,9 +54,13 @@ const COVERAGE_TARGET = 80;
 /** "1h30min", "2d", "5min" → minutos (un día de Sonar son 8 horas). */
 export function parseEffort(effort) {
   if (!effort) return 0;
+  const factor = { d: 480, h: 60, min: 1 };
+  // Tokens alternados número/unidad: sin backtracking (Sonar S8786).
+  const tokens = String(effort).match(/\d+|[a-z]+/g) ?? [];
   let minutes = 0;
-  for (const [, n, unit] of String(effort).matchAll(/(\d+)(d|h|min)/g)) {
-    minutes += Number(n) * (unit === "d" ? 480 : unit === "h" ? 60 : 1);
+  for (let i = 0; i + 1 < tokens.length; i++) {
+    const unit = factor[tokens[i + 1]];
+    if (/^\d/.test(tokens[i]) && unit) minutes += Number(tokens[i]) * unit;
   }
   return minutes;
 }
