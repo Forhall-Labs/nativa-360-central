@@ -1,0 +1,8 @@
+// Sin modelos todavía — ver AGENTS.md TODO: conectar el proyecto Supabase
+// real y modelar el contrato según los requerimientos del proyecto.
+// Workflow: editar este archivo -> `npm run contract:emit` -> commitear
+// contract.json + contract.d.ts junto con este archivo.
+
+namespace public {
+
+}

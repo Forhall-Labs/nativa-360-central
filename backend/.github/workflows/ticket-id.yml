@@ -1,0 +1,57 @@
+name: Assign MN360 ticket ID
+
+# Le pone un prefijo MN360-00001 (consecutivo, compartido entre los 4 repos
+# de Nativa 360) al título de cada issue nuevo. El número es la cantidad de
+# issues que ya existen en los 4 repos al momento de crearse este — no hay
+# contador central, así que si dos issues se crean casi al mismo tiempo en
+# repos distintos, en un caso muy raro podrían compartir número. Si una HU
+# toca varios repos, el número va solo en el issue "padre" — el resto se
+# linkea como sub-issue del padre (Parent issue / Sub-issues progress en el
+# Project), no necesita su propio MN360-XXXXX.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  assign-id:
+    if: ${{ !startsWith(github.event.issue.title, 'MN360-') }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Compute next MN360 number and update the issue title
+        run: |
+          set -euo pipefail
+          repos="nativa-360-e-com nativa-360-lading nativa-360-admin nativa-360-backend"
+          total=0
+          for repo in $repos; do
+            n=$(gh api "repos/Forhall-Labs/$repo/issues?state=all&per_page=100" --paginate \
+                  --jq '[.[] | select(.pull_request == null)] | length' \
+                | awk '{s+=$1} END {print s+0}')
+            total=$((total + n))
+          done
+          next=$(printf "MN360-%05d" "$total")
+          gh issue edit "${{ github.event.issue.number }}" \
+            --repo "${{ github.repository }}" \
+            --title "$next - ${{ github.event.issue.title }}"
+
+      # El GITHUB_TOKEN de la Action no puede tocar Projects (v2) — GitHub no
+      # lo permite para ningún repo, por eso este paso usa un Personal
+      # Access Token dedicado (secret de la organización, permiso único:
+      # Projects Read & write) solo para agregar el item y arrancarlo en
+      # Backlog. El resto del workflow sigue usando el token default.
+      - name: Add the issue to the Nativa-360-KANBAN project
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
+        run: |
+          set -euo pipefail
+          item_id=$(gh project item-add 1 --owner Forhall-Labs \
+            --url "${{ github.event.issue.html_url }}" --format json --jq '.id')
+          gh project item-edit \
+            --project-id "PVT_kwDOEuvP-c4BipG0" \
+            --id "$item_id" \
+            --field-id "PVTSSF_lADOEuvP-c4BipG0zhhgWBE" \
+            --single-select-option-id "140b0091"

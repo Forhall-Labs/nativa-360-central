@@ -1,0 +1,30 @@
+name: Keep Render awake
+
+# Render's free tier spins a web service down after ~15 min without traffic
+# (next request pays a cold-start of 30s-1min+). This pings /health every 10
+# minutes for each environment — enough margin under 15 min to absorb
+# GitHub's scheduler drift, which is not perfectly on-time.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping ${{ matrix.env }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [production, develop]
+    environment: ${{ matrix.env }}
+    steps:
+      - name: Ping health endpoint
+        run: |
+          if [ -z "$HEALTH_URL" ]; then
+            echo "::warning::RENDER_HEALTH_URL isn't set for the ${{ matrix.env }} environment — skipping. Set it in Settings -> Environments -> ${{ matrix.env }} -> Environment variables, to the service's onrender.com URL (Render Dashboard -> service -> the URL at the top)."
+            exit 0
+          fi
+          curl -fsS "$HEALTH_URL/health"
+        env:
+          HEALTH_URL: ${{ vars.RENDER_HEALTH_URL }}

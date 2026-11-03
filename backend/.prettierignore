@@ -1,0 +1,8 @@
+dist
+node_modules
+coverage
+package-lock.json
+.vscode
+*.tsbuildinfo
+src/prisma/contract.d.ts
+src/prisma/contract.json

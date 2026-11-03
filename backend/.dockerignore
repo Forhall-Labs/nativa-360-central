@@ -1,0 +1,14 @@
+node_modules
+dist
+coverage
+.git
+.github
+.husky
+.vscode
+test
+*.md
+.env
+.env.*
+!.env.example
+*.log
+npm-debug.log*

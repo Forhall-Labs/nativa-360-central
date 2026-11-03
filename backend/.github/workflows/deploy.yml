@@ -1,0 +1,39 @@
+name: Deploy to Render
+
+# Runs only after CI has passed on main or dev, so a broken lint/spell/
+# build/test/docker never triggers a deploy. main -> production, dev ->
+# develop, each with its own Render service and deploy-hook secret.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main, dev]
+    types: [completed]
+
+jobs:
+  deploy:
+    name: Deploy
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'develop' }}
+    steps:
+      - name: Resolve deploy hook for this environment
+        id: hook
+        run: |
+          if [ "${{ github.event.workflow_run.head_branch }}" = "main" ]; then
+            echo "url=$RENDER_DEPLOY_HOOK_URL_PRODUCTION" >> "$GITHUB_OUTPUT"
+          else
+            echo "url=$RENDER_DEPLOY_HOOK_URL_DEVELOP" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          RENDER_DEPLOY_HOOK_URL_PRODUCTION: ${{ secrets.RENDER_DEPLOY_HOOK_URL_PRODUCTION }}
+          RENDER_DEPLOY_HOOK_URL_DEVELOP: ${{ secrets.RENDER_DEPLOY_HOOK_URL_DEVELOP }}
+
+      - name: Trigger Render deploy hook
+        run: |
+          if [ -z "$HOOK_URL" ]; then
+            echo "::warning::Secret for the ${{ github.event.workflow_run.head_branch }} branch's Render deploy hook isn't configured — skipping deploy. Set it in Settings -> Secrets and variables -> Actions: RENDER_DEPLOY_HOOK_URL_PRODUCTION (main) or RENDER_DEPLOY_HOOK_URL_DEVELOP (dev). Get the URL from Render Dashboard -> service -> Settings -> Deploy Hook."
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK_URL"
+        env:
+          HOOK_URL: ${{ steps.hook.outputs.url }}
