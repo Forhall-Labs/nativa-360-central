@@ -55,7 +55,7 @@ const COVERAGE_TARGET = 80;
 export function parseEffort(effort) {
   if (!effort) return 0;
   let minutes = 0;
-  for (const [, n, unit] of String(effort).matchAll(/(\d+)\s*(d|h|min)/g)) {
+  for (const [, n, unit] of String(effort).matchAll(/(\d+)(d|h|min)/g)) {
     minutes += Number(n) * (unit === "d" ? 480 : unit === "h" ? 60 : 1);
   }
   return minutes;
