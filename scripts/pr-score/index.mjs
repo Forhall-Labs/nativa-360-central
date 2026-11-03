@@ -12,7 +12,8 @@
  * Inputs (environment): BASE_SHA, HEAD_SHA, PR_NUMBER, SONAR_PROJECT_KEY,
  * NEEDS, REQUIRED_CHECKS, GITHUB_REPOSITORY, GITHUB_TOKEN; optional
  * CHECKS_WAIT_MINUTES (default 45), SONAR_WAIT_MINUTES (default 20) and
- * COVERAGE_DIR (default coverage-reports).
+ * COVERAGE_DIR (default coverage-reports) and SNYK_DIR (default
+ * snyk-reports: the JSON/SARIF reports of the Snyk jobs, for the breakdown).
  * Coverage comes from the coverage-<project> artifacts of ci.yml's matrix,
  * downloaded under COVERAGE_DIR (one lcov.info per project folder).
  */
@@ -29,6 +30,14 @@ import {
   renderReport,
   renderWithheld,
 } from "./score.mjs";
+import {
+  buildBreakdown,
+  normalizeHotspots,
+  normalizeSonarIssues,
+  parseSnykJson,
+  parseSnykSarif,
+  renderBreakdown,
+} from "./breakdown.mjs";
 
 const env = (name) => {
   const value = process.env[name];
@@ -123,6 +132,95 @@ async function sonarMeasures(project, pr) {
   return measures;
 }
 
+/** Optional measures for the breakdown: a missing one only leaves a gap. */
+const EXTRA_METRICS = [
+  "new_technical_debt",
+  "new_sqale_debt_ratio",
+  "new_lines",
+];
+
+async function sonarExtraMeasures(project, pr) {
+  try {
+    const { component } = await getJson(
+      `${SONAR}/measures/component?component=${encodeURIComponent(project)}` +
+        `&pullRequest=${pr}&metricKeys=${EXTRA_METRICS.join(",")}`,
+    );
+    const measures = {};
+    for (const m of component.measures) {
+      const value = m.periods?.[0]?.value ?? m.period?.value ?? m.value;
+      if (value !== undefined) measures[m.metric] = value;
+    }
+    return measures;
+  } catch (error) {
+    console.log(`::warning::Sin métricas extra de Sonar: ${error.message}`);
+    return {};
+  }
+}
+
+/** Every open issue of the PR (paged), or null if Sonar does not answer. */
+async function sonarIssues(project, pr) {
+  try {
+    const issues = [];
+    for (let page = 1; page <= 10; page++) {
+      const data = await getJson(
+        `${SONAR}/issues/search?componentKeys=${encodeURIComponent(project)}` +
+          `&pullRequest=${pr}&resolved=false&ps=500&p=${page}`,
+      );
+      issues.push(...data.issues);
+      if (issues.length >= (data.paging?.total ?? data.total ?? 0)) break;
+    }
+    return normalizeSonarIssues(issues, project);
+  } catch (error) {
+    console.log(
+      `::warning::No se pudieron leer los issues de Sonar: ${error.message}`,
+    );
+    return null;
+  }
+}
+
+async function sonarHotspots(project, pr) {
+  try {
+    const { hotspots } = await getJson(
+      `${SONAR}/hotspots/search?projectKey=${encodeURIComponent(project)}` +
+        `&pullRequest=${pr}&status=TO_REVIEW&ps=500`,
+    );
+    return normalizeHotspots(hotspots, project);
+  } catch (error) {
+    console.log(
+      `::warning::No se pudieron leer los hotspots de Sonar: ${error.message}`,
+    );
+    return null;
+  }
+}
+
+/** Findings from the Snyk reports the Snyk jobs uploaded (if any). */
+function snykFindings() {
+  const dir = process.env.SNYK_DIR ?? "snyk-reports";
+  if (!existsSync(dir)) return [];
+  const findings = [];
+  for (const file of readdirSync(dir, { recursive: true })) {
+    const path = `${dir}/${file}`;
+    try {
+      if (String(file).endsWith("snyk-code.sarif")) {
+        findings.push(...parseSnykSarif(readFileSync(path, "utf8")));
+      } else if (String(file).endsWith("snyk-dependencies.json")) {
+        findings.push(
+          ...parseSnykJson(readFileSync(path, "utf8"), "dependencies"),
+        );
+      } else if (String(file).endsWith("snyk-container.json")) {
+        findings.push(
+          ...parseSnykJson(readFileSync(path, "utf8"), "container"),
+        );
+      }
+    } catch (error) {
+      console.log(
+        `::warning::Reporte de Snyk ilegible (${file}): ${error.message}`,
+      );
+    }
+  }
+  return findings;
+}
+
 /** LCOV per project: COVERAGE_DIR/coverage-<project>/lcov.info covers <project>/. */
 function coverageReports() {
   const coverage = new Map();
@@ -162,7 +260,9 @@ async function publishComment(body) {
   });
 }
 
-const project = env("SONAR_PROJECT_KEY");
+// Without it there is no score, but the breakdown of Snyk and coverage is
+// still published so the PR knows what to improve.
+const project = process.env.SONAR_PROJECT_KEY || null;
 const pr = env("PR_NUMBER");
 const head = env("HEAD_SHA");
 
@@ -199,9 +299,14 @@ async function tryPublish(body) {
 
 // The ci.yml jobs this one needs have already finished: a skipped job (no
 // project changed, Snyk disabled) is not a failure.
-const failedJobs = Object.entries(JSON.parse(process.env.NEEDS ?? "{}"))
+const needs = JSON.parse(process.env.NEEDS ?? "{}");
+const failedJobs = Object.entries(needs)
   .filter(([, job]) => !["success", "skipped"].includes(job.result))
   .map(([name, job]) => `${name} (${job.result})`);
+if (!project) {
+  failedJobs.push("SonarQube Cloud (falta la variable SONAR_PROJECT_KEY)");
+}
+const snyk = { result: needs.snyk?.result ?? null, findings: snykFindings() };
 
 const failed =
   failedJobs.length > 0
@@ -217,7 +322,11 @@ const failed =
 let result = null;
 let report;
 if (failed.length > 0) {
-  report = renderWithheld(failed, context);
+  report = renderWithheld(
+    failed,
+    context,
+    renderBreakdown(buildBreakdown({ sonar: null, snyk, coverage })),
+  );
 } else {
   await waitForSonar(
     project,
@@ -225,8 +334,28 @@ if (failed.length > 0) {
     head,
     Number(process.env.SONAR_WAIT_MINUTES ?? 20),
   );
-  result = computeScore(await sonarMeasures(project, pr), coverage);
-  report = renderReport(result, context);
+  const measures = await sonarMeasures(project, pr);
+  result = computeScore(measures, coverage);
+  const [extra, issues, hotspots] = await Promise.all([
+    sonarExtraMeasures(project, pr),
+    sonarIssues(project, pr),
+    sonarHotspots(project, pr),
+  ]);
+  const sonarUrl =
+    `https://sonarcloud.io/summary/new_code?id=${encodeURIComponent(project)}` +
+    `&pullRequest=${pr}`;
+  report = renderReport(
+    result,
+    context,
+    renderBreakdown(
+      buildBreakdown({
+        sonar: { measures, extra, issues, hotspots },
+        snyk,
+        coverage,
+      }),
+      sonarUrl,
+    ),
+  );
 }
 
 console.log(report);

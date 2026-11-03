@@ -81,6 +81,7 @@ function repoPath(file, root) {
 export function changedLineCoverage(changed, coverage) {
   let total = 0;
   let covered = 0;
+  const uncovered = new Map();
   for (const [file, lines] of changed) {
     const hits = coverage.get(file);
     if (!hits) continue;
@@ -88,12 +89,14 @@ export function changedLineCoverage(changed, coverage) {
       if (!hits.has(n)) continue;
       total++;
       if (hits.get(n) > 0) covered++;
+      else uncovered.set(file, [...(uncovered.get(file) ?? []), n]);
     }
   }
   return {
     total,
     covered,
     percent: total === 0 ? null : (covered / total) * 100,
+    uncovered,
   };
 }
 
@@ -214,7 +217,11 @@ ${footer(context)}
 `;
 }
 
-export function renderReport({ score, passed, items }, context) {
+export function renderReport(
+  { score, passed, items },
+  context,
+  breakdown = "",
+) {
   const rows = items
     .map((i) => `| ${i.name} | ${round(i.points)} / ${i.max} | ${i.detail} |`)
     .join("\n");
@@ -227,11 +234,11 @@ ${rows}
 
 ${
   passed
-    ? "Alcanza la nota mínima. El merge también requiere la aprobación de una persona."
+    ? "Alcanza la nota mínima. Revisá igual los aspectos de mejora del desglose."
     : "No alcanza la nota mínima: el merge queda bloqueado hasta subirla."
 }
 
-${footer(context)}
+${breakdown ? `${breakdown}\n` : ""}${footer(context)}
 `;
 }
 
@@ -278,7 +285,7 @@ export function checksState(required, checkRuns, statuses) {
 }
 
 /** The report when the score is withheld because other checks did not pass. */
-export function renderWithheld(failed, context) {
+export function renderWithheld(failed, context, breakdown = "") {
   return `${COMMENT_MARKER}
 ## ❌ PR score: sin nota
 
@@ -288,6 +295,6 @@ ${failed.map((name) => `- ${name}`).join("\n")}
 
 Corregí esos checks y hacé push: el PR score vuelve a correr con el nuevo commit.
 
-${footer(context)}
+${breakdown ? `${breakdown}\n` : ""}${footer(context)}
 `;
 }

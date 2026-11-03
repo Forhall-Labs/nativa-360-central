@@ -32,6 +32,34 @@ runs everything again on the new commit.
 
 Building, tests and Snyk are separate required checks; they do not add points.
 
+## Breakdown (desglose)
+
+Below the score table the comment has a **Desglose** with one collapsible
+section per dimension. Each shows its metrics and its **aspectos de mejora**
+(file and line, message, severity, rule and estimated effort), sorted from
+most to least severe, or "ninguno" when there is nothing to improve. Sections
+with improvements open expanded; at most 10 items are listed per section.
+
+| Dimension                                        | Source                                                                                                                       |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| 🔒 Seguridad                                     | Sonar vulnerabilities and security hotspots to review; Snyk Code findings                                                    |
+| 🛡️ Vulnerabilidades en dependencias y contenedor | Snyk (`package-lock.json` of the 4 projects and the backend image), every severity, with the version that fixes each one     |
+| 🐞 Fiabilidad                                    | Sonar bugs                                                                                                                   |
+| 🧹 Mantenibilidad                                | Sonar code smells that are not about readability                                                                             |
+| 📖 Legibilidad                                   | Sonar code smells with a Clean Code attribute of formatting, naming, clarity or convention, and cognitive complexity (S3776) |
+| 💸 Deuda técnica                                 | Sonar new technical debt and debt ratio; the 5 issues that add the most debt                                                 |
+| 📑 Duplicación                                   | Sonar duplication on new code, above 3 %                                                                                     |
+| 🧪 Cobertura                                     | Changed lines without tests, per file                                                                                        |
+
+Status per section: ✅ nothing to improve, ⚠️ only medium or lower, ❌ high or
+worse (or a failed gate), ⏸️ not evaluated (no Sonar analysis, Snyk
+disabled). The breakdown does not change the score; it explains it. When the
+score is withheld (a check failed or `SONAR_PROJECT_KEY` is missing), the
+comment still carries the Snyk and coverage sections. The Snyk jobs run
+without a threshold to report every severity, and fail on medium or higher
+themselves. The logic is `scripts/pr-score/breakdown.mjs` (tested by
+`breakdown.test.mjs`).
+
 ## Details
 
 - **Coverage** counts only changed lines that are executable and inside a

@@ -65,7 +65,11 @@ Corren en cada PR contra `main`:
 - **PR score**: nota 0–100 con las notas de SonarQube Cloud sobre el código
   nuevo y la cobertura de las líneas que el PR cambia. Mínimo **80**. Solo se
   calcula si pasó todo lo demás. Es check requerido. Ver
-  [`docs/PR_SCORE.md`](docs/PR_SCORE.md).
+  [`docs/PR_SCORE.md`](docs/PR_SCORE.md). El comentario del PR trae un
+  desglose por dimensión (seguridad, vulnerabilidades, fiabilidad,
+  mantenibilidad, legibilidad, deuda técnica, duplicación y cobertura), cada
+  una con sus aspectos de mejora o "ninguno". Antes de pedir merge, resolvé
+  los que estén en ❌.
 
 Nunca bajes un umbral, saltes un check ni excluyas archivos de Sonar para
 que un PR pase: corregí el código o agregá tests.

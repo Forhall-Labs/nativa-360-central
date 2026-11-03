@@ -49,7 +49,12 @@ test("only executable changed lines count toward coverage", () => {
     "backend",
   );
   const result = changedLineCoverage(changedLines(DIFF), coverage);
-  assert.deepEqual(result, { total: 2, covered: 1, percent: 50 });
+  assert.deepEqual(result, {
+    total: 2,
+    covered: 1,
+    percent: 50,
+    uncovered: new Map([["backend/src/a.ts", [5]]]),
+  });
   assert.equal(changedLineCoverage(new Map(), coverage).percent, null);
 });
 

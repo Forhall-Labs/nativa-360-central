@@ -153,15 +153,27 @@ jobs:
         with:
           snyk-version: v1.1308.2
 
+      # Snyk corre sin umbral para que el reporte (que el PR score usa en
+      # su desglose) tenga todas las severidades; el gate lo decide jq:
+      # falla con al menos una medium, high o critical.
       - name: Scan dependencies (package-lock.json de los 4 proyectos)
         if: matrix.scan == 'dependencies'
-        run: snyk test --all-projects --severity-threshold=medium
+        run: |
+          mkdir -p snyk-reports
+          snyk test --all-projects --json-file-output=snyk-reports/snyk-dependencies.json || [ $? -eq 1 ]
+          jq -e '[(if type == "array" then .[] else . end) | .vulnerabilities[]?
+                  | select(.severity == "medium" or .severity == "high" or .severity == "critical")]
+                 | length == 0' snyk-reports/snyk-dependencies.json > /dev/null
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Scan source code
         if: matrix.scan == 'code'
-        run: snyk code test --severity-threshold=medium
+        run: |
+          mkdir -p snyk-reports
+          snyk code test --sarif-file-output=snyk-reports/snyk-code.sarif || [ $? -eq 1 ]
+          jq -e '[.runs[]?.results[]? | select(.level == "error" or .level == "warning")]
+                 | length == 0' snyk-reports/snyk-code.sarif > /dev/null
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
@@ -171,9 +183,24 @@ jobs:
 
       - name: Scan backend runtime image
         if: matrix.scan == 'container'
-        run: snyk container test nativa-360-backend:ci --file=backend/Dockerfile --severity-threshold=medium
+        run: |
+          mkdir -p snyk-reports
+          snyk container test nativa-360-backend:ci --file=backend/Dockerfile \
+            --json-file-output=snyk-reports/snyk-container.json || [ $? -eq 1 ]
+          jq -e '[., (.applications[]?) | .vulnerabilities[]?
+                  | select(.severity == "medium" or .severity == "high" or .severity == "critical")]
+                 | length == 0' snyk-reports/snyk-container.json > /dev/null
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Subir reporte para el desglose del PR score
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-${{ matrix.scan }}
+          path: snyk-reports/
+          if-no-files-found: ignore
+          retention-days: 3
 
   ci-ok:
     name: CI ok
@@ -217,7 +244,7 @@ jobs:
           node-version: lts/*
 
       - name: Test the score calculation
-        run: node --test scripts/pr-score/score.test.mjs
+        run: node --test scripts/pr-score/score.test.mjs scripts/pr-score/breakdown.test.mjs
 
       - name: Descargar cobertura de los proyectos tocados
         if: needs.checks.result == 'success'
@@ -225,6 +252,15 @@ jobs:
         with:
           pattern: coverage-*
           path: coverage-reports
+
+      - name: Descargar reportes de Snyk
+        if: needs.snyk.result == 'success' || needs.snyk.result == 'failure'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: snyk-*
+          path: snyk-reports
+          merge-multiple: true
 
       - name: Compute and publish the score
         run: node scripts/pr-score/index.mjs
@@ -235,6 +271,7 @@ jobs:
           SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
           GITHUB_TOKEN: ${{ github.token }}
           COVERAGE_DIR: coverage-reports
+          SNYK_DIR: snyk-reports
           NEEDS: ${{ toJSON(needs) }}
           # Checks externos a este workflow que también tienen que pasar.
           REQUIRED_CHECKS: |
