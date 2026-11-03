@@ -264,7 +264,11 @@ test("without Sonar the Sonar dimensions are not evaluated, Snyk and coverage st
     assert.equal(section(sections, title).status, "⏸️", title);
   }
   assert.equal(section(sections, "Cobertura").status, "✅");
-  assert.match(renderBreakdown(sections), /no se pudieron evaluar/);
+  const md = renderBreakdown(sections);
+  assert.match(md, /no se pudieron evaluar/);
+  assert.doesNotMatch(md, /No hay aspectos de mejora en ninguna dimensión/);
+  assert.match(md, /7 dimensiones no se pudieron evaluar/);
+  assert.match(md, /Seguridad<\/b> — no evaluado/);
 });
 
 test("long lists are capped with a count of the rest", () => {

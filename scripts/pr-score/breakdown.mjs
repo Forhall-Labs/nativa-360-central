@@ -455,7 +455,7 @@ function renderSection({ title, status, metrics, notes, items }) {
   const extraNotes =
     items.length === 0 && notes.length > 0 ? `\n\n${notes.join("\n\n")}` : "";
   return `<details${items.length > 0 ? " open" : ""}>
-<summary><b>${status} ${title}</b> — ${items.length === 0 ? "sin aspectos de mejora" : `${items.length} aspecto${items.length === 1 ? "" : "s"} de mejora`}</summary>
+<summary><b>${status} ${title}</b> — ${items.length > 0 ? `${items.length} aspecto${items.length === 1 ? "" : "s"} de mejora` : status === "⏸️" ? "no evaluado" : "sin aspectos de mejora"}</summary>
 
 ${metrics.map((x) => `- ${x}`).join("\n")}
 
@@ -471,13 +471,20 @@ export function renderBreakdown(sections, sonarUrl) {
     (sum, s) => sum + s.items.filter((i) => SERIOUS.has(i.severity)).length,
     0,
   );
+  const pending = sections.filter((s) => s.status === "⏸️").length;
+  const summary =
+    total === 0
+      ? pending === 0
+        ? "No hay aspectos de mejora en ninguna dimensión."
+        : "No se encontraron aspectos de mejora en lo que se pudo evaluar."
+      : `**${total} aspecto${total === 1 ? "" : "s"} de mejora** (${serious} de severidad alta o mayor). Cada dimensión los lista de más a menos grave.`;
+  const pendingNote =
+    pending === 0
+      ? ""
+      : ` ${pending} dimensi${pending === 1 ? "ón no se pudo" : "ones no se pudieron"} evaluar (⏸️): falta el análisis de SonarQube Cloud o Snyk está desactivado.`;
   return `### Desglose
 
-${
-  total === 0
-    ? "No hay aspectos de mejora en ninguna dimensión."
-    : `**${total} aspecto${total === 1 ? "" : "s"} de mejora** (${serious} de severidad alta o mayor). Cada dimensión los lista de más a menos grave.`
-}
+${summary}${pendingNote}
 
 ${sections.map(renderSection).join("\n\n")}
 ${sonarUrl ? `\n[Ver el análisis completo en SonarQube Cloud](${sonarUrl})\n` : ""}`;
