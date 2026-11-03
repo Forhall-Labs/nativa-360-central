@@ -1,0 +1,120 @@
+name: CI
+
+# Corre en cada PR los mismos checks que cada repo individual, solo para
+# las carpetas que el PR toca. El job "CI ok" es el único que hay que
+# marcar como required en la protección de ramas: queda verde si todo lo
+# que corrió pasó (o si no había nada que correr).
+on:
+  pull_request:
+    branches: [dev, stage, main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Detectar proyectos tocados
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.diff.outputs.projects }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Diff contra la rama destino
+        id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          changed=$(git diff --name-only "$BASE...$HEAD")
+          projects=$(for p in admin backend e-com landing; do
+            grep -q "^$p/" <<<"$changed" && echo "$p" || true
+          done | jq -Rsc 'split("\n") | map(select(. != ""))')
+          echo "projects=$projects" >> "$GITHUB_OUTPUT"
+          echo "Proyectos tocados: $projects"
+
+  checks:
+    name: ${{ matrix.project }}
+    needs: changes
+    if: needs.changes.outputs.projects != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.changes.outputs.projects) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies (fails on high/critical)
+        if: matrix.project == 'backend'
+        run: npm run audit
+
+      - name: Check formatting (Prettier)
+        run: npm run format:check
+
+      - name: Spell check
+        run: npm run spell
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build (includes type-check)
+        run: npm run build
+        env:
+          # Placeholders para los proyectos Next.js (ver ci-cd.yml de cada
+          # uno); el backend los ignora.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+
+      - name: E2E tests
+        if: matrix.project == 'backend'
+        run: npm run test:e2e
+
+      - name: Docker build
+        if: matrix.project == 'backend'
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: false
+          tags: nativa-360-backend:ci
+
+  ci-ok:
+    name: CI ok
+    needs: [changes, checks]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar resultados
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Resultados: $RESULTS"
+          case " $RESULTS " in
+            *" failure "*|*" cancelled "*) exit 1 ;;
+          esac

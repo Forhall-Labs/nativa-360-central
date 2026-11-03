@@ -1,0 +1,14 @@
+#!/bin/sh
+# Corre el lint-staged de cada proyecto que tiene archivos en stage.
+# Se activa una vez por clon con: git config core.hooksPath .githooks
+set -e
+for p in admin backend e-com landing; do
+  if git diff --cached --name-only -- "$p/" | grep -q .; then
+    if [ ! -d "$p/node_modules" ]; then
+      echo "pre-commit: falta $p/node_modules — corré 'npm install' en $p/" >&2
+      exit 1
+    fi
+    echo "pre-commit: lint-staged en $p/"
+    (cd "$p" && npx --no-install lint-staged)
+  fi
+done

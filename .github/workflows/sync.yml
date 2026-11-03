@@ -1,0 +1,76 @@
+name: Sync a repos individuales
+
+# Cada push a dev/stage/main del central (o sea, cada PR mergeado) publica
+# el contenido de cada carpeta en la misma rama de su repo individual, con
+# `git subtree split`. El split es determinístico: reproduce los commits
+# originales con los mismos SHA, así que el push siempre es fast-forward y
+# nunca se reescribe historial. Si alguien commiteó directo en un repo
+# individual, el push se rechaza (non-fast-forward) y el job falla — nunca
+# se fuerza.
+#
+# Requiere el secret SYNC_TOKEN: fine-grained PAT de un admin de la org
+# (resource owner Forhall-Labs) con acceso a los 4 repos y permisos
+# Contents: Read and write + Workflows: Read and write. Tiene que ser de un
+# admin porque las ramas protegidas de los repos individuales piden PR y
+# solo los admins las saltan (enforce_admins está apagado).
+on:
+  push:
+    branches: [dev, stage, main]
+  workflow_dispatch:
+
+concurrency:
+  group: sync-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: ${{ matrix.dir }} → ${{ matrix.repo }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { dir: admin, repo: nativa-360-admin, branches: "dev stage main" }
+          - { dir: backend, repo: nativa-360-backend, branches: "dev main" }
+          - { dir: e-com, repo: nativa-360-e-com, branches: "dev stage main" }
+          - {
+              dir: landing,
+              repo: nativa-360-lading,
+              branches: "dev stage main",
+            }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          # Sin esto el GITHUB_TOKEN queda como header de auth y pisa al
+          # SYNC_TOKEN al pushear al otro repo.
+          persist-credentials: false
+
+      - name: Split y push
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          DIR: ${{ matrix.dir }}
+          REPO: ${{ matrix.repo }}
+          BRANCHES: ${{ matrix.branches }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          case " $BRANCHES " in
+            *" $BRANCH "*) ;;
+            *) echo "$REPO no usa la rama $BRANCH — nada que sincronizar."; exit 0 ;;
+          esac
+          if [ -z "$SYNC_TOKEN" ]; then
+            echo "::error::Falta el secret SYNC_TOKEN (ver comentario al inicio de sync.yml)."
+            exit 1
+          fi
+          sha=$(git subtree split --prefix="$DIR" HEAD)
+          remote="https://x-access-token:${SYNC_TOKEN}@github.com/Forhall-Labs/${REPO}.git"
+          if ! git push "$remote" "$sha:refs/heads/$BRANCH"; then
+            echo "::error::Push rechazado en $REPO@$BRANCH. Si es non-fast-forward, alguien commiteó directo en el repo individual: traé ese cambio al central con 'git subtree pull --prefix=$DIR https://github.com/Forhall-Labs/$REPO.git $BRANCH' y volvé a correr este workflow."
+            exit 1
+          fi
+          echo "### $DIR → $REPO@$BRANCH: \`$sha\`" >> "$GITHUB_STEP_SUMMARY"
