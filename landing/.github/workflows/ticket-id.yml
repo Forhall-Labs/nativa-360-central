@@ -23,9 +23,14 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Compute next MN360 number and update the issue title
+        # Datos del issue por env, nunca interpolados en el script: el
+        # título lo escribe cualquiera y permitiría inyectar comandos.
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
         run: |
           set -euo pipefail
-          repos="nativa-360-e-com nativa-360-lading nativa-360-admin nativa-360-backend"
+          repos="nativa-360-central nativa-360-e-com nativa-360-lading nativa-360-admin nativa-360-backend"
           total=0
           for repo in $repos; do
             n=$(gh api "repos/Forhall-Labs/$repo/issues?state=all&per_page=100" --paginate \
@@ -34,9 +39,9 @@ jobs:
             total=$((total + n))
           done
           next=$(printf "MN360-%05d" "$total")
-          gh issue edit "${{ github.event.issue.number }}" \
-            --repo "${{ github.repository }}" \
-            --title "$next - ${{ github.event.issue.title }}"
+          gh issue edit "$ISSUE_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$next - $ISSUE_TITLE"
 
       # El GITHUB_TOKEN de la Action no puede tocar Projects (v2) — GitHub no
       # lo permite para ningún repo, por eso este paso usa un Personal
@@ -46,10 +51,11 @@ jobs:
       - name: Add the issue to the Nativa-360-KANBAN project
         env:
           GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
         run: |
           set -euo pipefail
           item_id=$(gh project item-add 1 --owner Forhall-Labs \
-            --url "${{ github.event.issue.html_url }}" --format json --jq '.id')
+            --url "$ISSUE_URL" --format json --jq '.id')
           gh project item-edit \
             --project-id "PVT_kwDOEuvP-c4BipG0" \
             --id "$item_id" \

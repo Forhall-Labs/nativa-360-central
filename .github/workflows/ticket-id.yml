@@ -1,0 +1,65 @@
+name: Assign MN360 ticket ID
+
+# Le pone un prefijo MN360-00001 al título de cada issue nuevo y lo agrega
+# al Project Nativa-360-KANBAN en Backlog. Los issues se abren acá, en el
+# central: uno solo aunque la HU toque varios proyectos (se marcan en el
+# campo "Proyecto(s)" de la plantilla). Los repos individuales tienen la
+# misma automatización por si alguien abre un issue ahí.
+#
+# El número es la cantidad de issues que ya existen en el central y los 4
+# repos individuales al momento de crearse este. No hay contador central:
+# si dos issues se crean casi al mismo tiempo, en un caso muy raro podrían
+# compartir número.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  assign-id:
+    if: ${{ !startsWith(github.event.issue.title, 'MN360-') }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Compute next MN360 number and update the issue title
+        # Datos del issue por env, nunca interpolados en el script: el
+        # título lo escribe cualquiera y permitiría inyectar comandos.
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          set -euo pipefail
+          repos="nativa-360-central nativa-360-e-com nativa-360-lading nativa-360-admin nativa-360-backend"
+          total=0
+          for repo in $repos; do
+            n=$(gh api "repos/Forhall-Labs/$repo/issues?state=all&per_page=100" --paginate \
+                  --jq '[.[] | select(.pull_request == null)] | length' \
+                | awk '{s+=$1} END {print s+0}')
+            total=$((total + n))
+          done
+          next=$(printf "MN360-%05d" "$total")
+          gh issue edit "$ISSUE_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$next - $ISSUE_TITLE"
+
+      # El GITHUB_TOKEN de la Action no puede tocar Projects (v2) — GitHub no
+      # lo permite para ningún repo, por eso este paso usa un Personal
+      # Access Token dedicado (secret de la organización, permiso único:
+      # Projects Read & write) solo para agregar el item y arrancarlo en
+      # Backlog. El resto del workflow sigue usando el token default.
+      - name: Add the issue to the Nativa-360-KANBAN project
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: |
+          set -euo pipefail
+          item_id=$(gh project item-add 1 --owner Forhall-Labs \
+            --url "$ISSUE_URL" --format json --jq '.id')
+          gh project item-edit \
+            --project-id "PVT_kwDOEuvP-c4BipG0" \
+            --id "$item_id" \
+            --field-id "PVTSSF_lADOEuvP-c4BipG0zhhgWBE" \
+            --single-select-option-id "140b0091"
