@@ -1,32 +1,31 @@
 # Flujo de trabajo
 
-1. Rama nueva desde `dev`, linkeada al issue (aparece en el panel
-   "Development" del issue y se cierra solo al mergear el PR):
-   `gh issue develop <número> --checkout --base dev`. Si no usás `gh`, se
-   puede linkear a mano con el botón "Create a branch" del issue, o
-   simplemente escribiendo `Closes #<número>` en el PR (ver el template).
-2. Al commitear, un hook de pre-commit (husky + lint-staged) corre Prettier,
-   ESLint y cspell sobre los archivos modificados — si algo no pasa, el
-   commit se cancela y hay que corregirlo antes de reintentar.
-3. Al pushear, un hook de pre-push corre `npm audit --audit-level=high` — si
-   agregaste una dependencia con una vulnerabilidad high/critical conocida,
-   el push se cancela (ver "Seguridad de dependencias" abajo).
-4. Si el cambio toca `src/prisma/contract.prisma`, correr
+Este proyecto vive en la carpeta `backend/` de
+[nativa-360-central](https://github.com/Forhall-Labs/nativa-360-central), que
+usa **trunk-based development**: una sola rama, `main`. Ahí se abren los PRs y
+corren los quality gates. Este repo es una copia que se actualiza sola al
+mergear; **no se abren PRs ni se pushea acá**. El flujo completo está en el
+[`AGENTS.md` del central](https://github.com/Forhall-Labs/nativa-360-central/blob/main/AGENTS.md).
+
+1. En el central, rama corta desde `main` (`feat/…`, `fix/…`, `chore/…`) y
+   linkeada al issue con `Closes Forhall-Labs/nativa-360-backend#<número>` en
+   el PR.
+2. Al commitear, el hook de pre-commit del central (`.githooks/pre-commit`)
+   corre el lint-staged de este proyecto (Prettier, ESLint y cspell sobre lo
+   staged). Si algo no pasa, el commit se cancela.
+3. Si el cambio toca `src/prisma/contract.prisma`, correr
    `npm run contract:emit` y commitear `contract.json`/`contract.d.ts` junto
    con el cambio, antes de abrir el PR.
-5. Abrí el Pull Request contra `dev` (se completa solo con el template de
-   `.github/pull_request_template.md`). GitHub Actions corre `audit`,
-   `format:check`, `spell`, `lint`, `build`, `test`, `test:e2e` y un build de
-   la imagen Docker — tiene que quedar en verde antes de mergear.
-6. Merge por **squash**: el historial de `dev`/`main` queda un commit por
-   PR. La rama se borra sola al mergear.
-7. Un push a `dev` dispara el deploy al ambiente **develop** en Render; un
-   push a `main` dispara el deploy a **producción**
-   (`.github/workflows/deploy.yml`), en ambos casos solo si la CI de esa
-   rama pasó. Cuando `dev` está listo para salir, se abre un PR de `dev` →
-   `main` (mismo flujo: CI verde, squash merge) — no se pushea a `main`
-   directo.
-8. `.github/workflows/keep-alive.yml` le pega a `/health` cada 10 minutos en
+4. PR contra `main`. Tienen que pasar **CI ok** (`audit`, `format:check`,
+   `spell`, `lint`, tests con cobertura, `build`, `test:e2e`, build de Docker
+   y Snyk) y **PR score** (SonarQube Cloud + cobertura de las líneas
+   cambiadas, mínimo 80). Merge por **squash**.
+5. Al mergear, el central pushea esta carpeta al `main` de este repo y
+   dispara `.github/workflows/ci.yml`: repite los checks y, si pasan,
+   despliega al ambiente que diga `deploy-flags.json` del central (`dev` →
+   servicio **develop** de Render, `prod` → **producción**). Los dos
+   servicios de Render tienen que tener configurada la rama `main`.
+6. `.github/workflows/keep-alive.yml` le pega a `/health` cada 10 minutos en
    ambos ambientes, para que el free tier de Render no los duerma por
    inactividad. Necesita la variable de entorno `RENDER_HEALTH_URL`
    configurada por ambiente (Settings → Environments → production/develop →
@@ -44,6 +43,8 @@ npm test
 npm run test:e2e
 ```
 
+`npm run test:cov` corre los tests con la cobertura que usa el PR score.
+
 Si alguno falla, `npm run format` corrige lo que se pueda automáticamente.
 
 ## Seguridad de dependencias
@@ -52,8 +53,10 @@ Si alguno falla, `npm run format` corrige lo que se pueda automáticamente.
 es algo que npm soporte nativamente. Por eso el bloqueo real está en dos
 puntos:
 
-- **Local**: hook de pre-push (`npm run audit`).
-- **CI**: primer paso del workflow, antes de format/lint/build/test.
+- **Local**: hook de pre-push del central (`.githooks/pre-push`, corre
+  `npm run audit` si la rama toca `backend/`).
+- **CI**: primer paso de los checks del backend en el central, antes de
+  format/lint/build/test.
 
 El umbral es `--audit-level=high`: bloquea `high`/`critical`, pero no
 `moderate`/`low` — esas igual quedan visibles en Dependabot alerts (pestaña

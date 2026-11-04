@@ -51,7 +51,10 @@
     "usás",
     "linkear",
     "PVTSSF",
-    "zhhg"
+    "zhhg",
+    "SonarQube",
+    "corepack",
+    "yarnpkg"
   ],
   "ignorePaths": [
     "node_modules",

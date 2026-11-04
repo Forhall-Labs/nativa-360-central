@@ -30,9 +30,11 @@ Abrí [http://localhost:3000](http://localhost:3000) (hello world) y
 
 ## CI/CD
 
-Dos ramas, dos ambientes en Render: `dev` → develop, `main` → producción.
-Cada Pull Request corre `audit`, `format:check`, `spell`, `lint`, `build`,
-`test`, `test:e2e` y un build de Docker vía GitHub Actions
-(`.github/workflows/ci.yml`); cada push a esas ramas, si la CI pasa, dispara
-el deploy (`.github/workflows/deploy.yml`). Ver `CONTRIBUTING.md` para el
-flujo completo.
+Trunk-based: el código se trabaja en la carpeta `backend/` de
+[nativa-360-central](https://github.com/Forhall-Labs/nativa-360-central), donde
+cada PR contra `main` pasa por los quality gates (CI, Snyk, SonarQube Cloud y
+PR score). Al mergear, el central pushea a `main` de este repo y dispara
+`.github/workflows/ci.yml`, que repite `audit`, `format:check`, `spell`,
+`lint`, `build`, `test`, `test:e2e` y el build de Docker, y despliega a
+Render develop (`dev`) o producción (`prod`) según el feature flag
+`deploy-flags.json` del central. Ver `CONTRIBUTING.md`.

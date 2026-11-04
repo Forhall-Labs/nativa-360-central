@@ -1,0 +1,12 @@
+#!/bin/sh
+# Corre el .husky/pre-push de cada proyecto que la rama cambia respecto de
+# origin/main (hoy: el npm audit del backend).
+set -e
+base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
+for p in admin backend e-com landing; do
+  [ -f "$p/.husky/pre-push" ] || continue
+  if [ -z "$base" ] || git diff --name-only "$base" HEAD -- "$p/" | grep -q .; then
+    echo "pre-push: $p/.husky/pre-push"
+    (cd "$p" && sh .husky/pre-push)
+  fi
+done
