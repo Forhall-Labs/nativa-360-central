@@ -53,8 +53,8 @@
     "PVTSSF",
     "zhhg",
     "SonarQube",
-    "trixie",
-    "corepack"
+    "corepack",
+    "yarnpkg"
   ],
   "ignorePaths": [
     "node_modules",
