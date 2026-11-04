@@ -13,7 +13,7 @@ import {
   renderBreakdown,
 } from "./breakdown.mjs";
 
-const KEY = "forhall_nativa";
+const PROJECT = "forhall_nativa";
 const NO_COVERAGE = {
   total: 0,
   covered: 0,
@@ -31,7 +31,7 @@ const issue = (over) => ({
   key: "k",
   rule: "typescript:S1234",
   severity: "MAJOR",
-  component: `${KEY}:admin/src/a.ts`,
+  component: `${PROJECT}:admin/src/a.ts`,
   line: 7,
   message: "Mensaje",
   effort: "10min",
@@ -68,7 +68,7 @@ test("Sonar issues: standard and MQR modes, readability split", () => {
       issue({ cleanCodeAttribute: "CLEAR" }),
       issue({ rule: "typescript:S3776" }),
     ],
-    KEY,
+    PROJECT,
   );
   assert.equal(smell.file, "admin/src/a.ts");
   assert.equal(smell.effortMinutes, 10);
@@ -182,18 +182,18 @@ test("each finding lands in its dimension with its improvement", () => {
         message: "Renombrar variable",
       }),
     ],
-    KEY,
+    PROJECT,
   );
   const hotspots = normalizeHotspots(
     [
       {
-        component: `${KEY}:backend/src/b.ts`,
+        component: `${PROJECT}:backend/src/b.ts`,
         line: 2,
         message: "Regex",
         vulnerabilityProbability: "LOW",
       },
     ],
-    KEY,
+    PROJECT,
   );
   const sections = buildBreakdown({
     sonar: {
@@ -276,7 +276,7 @@ test("long lists are capped with a count of the rest", () => {
     Array.from({ length: MAX_ITEMS + 3 }, (_, i) =>
       issue({ type: "BUG", line: i + 1 }),
     ),
-    KEY,
+    PROJECT,
   );
   const sections = buildBreakdown({
     sonar: { measures: PERFECT, extra: {}, issues, hotspots: [] },
