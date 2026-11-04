@@ -8,8 +8,8 @@
 
 ## Issue relacionado
 
-<!-- "Closes #123" (o "Closes Forhall-Labs/nativa-360-admin#123" si el issue vive en
-un repo individual) para que GitHub linkee este PR al issue y lo cierre solo al
+<!-- "Closes #123" (los issues se abren en el central; "Closes
+Forhall-Labs/nativa-360-admin#123" solo para issues viejos de un repo individual) para que GitHub linkee este PR al issue y lo cierre solo al
 mergear. Si el PR no cierra el issue todavía, usá "Relacionado con #123". -->
 
 Closes #

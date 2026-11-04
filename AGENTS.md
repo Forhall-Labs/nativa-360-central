@@ -41,11 +41,26 @@ Hay **una sola rama de larga vida: `main`** (el trunk). No existen `dev`,
 2. Commits chicos. El pre-commit (`.githooks/pre-commit`) corre el
    lint-staged de cada proyecto tocado y el pre-push (`.githooks/pre-push`)
    el `npm audit` del backend si lo tocaste.
-3. PR contra `main` con la plantilla. Para cerrar un issue de un repo
-   individual: `Closes Forhall-Labs/nativa-360-admin#123`.
+3. PR contra `main` con la plantilla y `Closes #123` para el issue del
+   central (o `Closes Forhall-Labs/nativa-360-admin#123` si es un issue viejo
+   de un repo individual).
 4. Tienen que pasar los checks requeridos **CI ok** y **PR score**.
 5. Squash merge → `sync.yml` publica cada carpeta en el `main` de su repo y
    dispara el deploy según `deploy-flags.json`.
+
+## Issues y GitHub Project
+
+El tablero es [Nativa-360-KANBAN](https://github.com/orgs/Forhall-Labs/projects/1),
+linkeado al central y a los 4 repos individuales.
+
+- Los issues nuevos se abren **en el central**, uno por HU o bug aunque toque
+  varios proyectos (campo "Proyecto(s)" de la plantilla).
+- `.github/workflows/ticket-id.yml` le pone el prefijo `MN360-XXXXX`
+  (consecutivo compartido con los repos individuales) y lo agrega al Project
+  en **Backlog**. Usa el secret de organización `PROJECT_AUTOMATION_TOKEN`
+  (Projects read & write), porque el `GITHUB_TOKEN` no puede tocar Projects.
+- El PR que lo resuelve lleva `Closes #<n>`: GitHub lo muestra en la tarjeta
+  y cierra el issue al mergear.
 
 ## Quality gates (`.github/workflows/ci.yml`)
 

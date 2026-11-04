@@ -25,7 +25,7 @@ jobs:
       - name: Compute next MN360 number and update the issue title
         run: |
           set -euo pipefail
-          repos="nativa-360-e-com nativa-360-lading nativa-360-admin nativa-360-backend"
+          repos="nativa-360-central nativa-360-e-com nativa-360-lading nativa-360-admin nativa-360-backend"
           total=0
           for repo in $repos; do
             n=$(gh api "repos/Forhall-Labs/$repo/issues?state=all&per_page=100" --paginate \
