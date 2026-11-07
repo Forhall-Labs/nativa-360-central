@@ -2,6 +2,24 @@
 
 Landing page de Nativa 360. Next.js (App Router) + TypeScript.
 
+## Documentación
+
+Antes de construir una sección o una HU, leé [`docs/`](docs/):
+
+- [`docs/requirements.md`](docs/requirements.md): requisitos y reglas de
+  negocio de la landing.
+- [`docs/system-design.md`](docs/system-design.md): secciones, datos que lee
+  de la API y renderizado.
+- [`docs/ui-spec.md`](docs/ui-spec.md): identidad visual y comportamiento de
+  cada sección.
+- [`docs/epics/`](docs/epics/): épica e HU-01 con escenarios Gherkin. Cada
+  escenario es un criterio de aceptación y necesita su test.
+
+La contraparte de cada HU en la API está en
+[`../backend/docs/`](../backend/docs/). El índice de todo el proyecto está en
+el `docs/README.md` del repo central. Si cambia una regla o un escenario,
+actualizá el documento en el mismo PR.
+
 ## Stack
 
 - **Next.js** (App Router) + TypeScript + **Tailwind CSS**.
