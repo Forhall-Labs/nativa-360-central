@@ -248,7 +248,7 @@ jobs:
 
       - name: Descargar cobertura de los proyectos tocados
         if: needs.checks.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: coverage-*
           path: coverage-reports
@@ -256,7 +256,7 @@ jobs:
       - name: Descargar reportes de Snyk
         if: needs.snyk.result == 'success' || needs.snyk.result == 'failure'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: snyk-*
           path: snyk-reports
