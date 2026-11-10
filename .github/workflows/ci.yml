@@ -101,7 +101,7 @@ jobs:
         run: npm run test:cov
 
       - name: Subir cobertura para el PR score
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ matrix.project }}
           path: ${{ matrix.project }}/coverage/lcov.info
@@ -195,7 +195,7 @@ jobs:
 
       - name: Subir reporte para el desglose del PR score
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: snyk-${{ matrix.scan }}
           path: snyk-reports/
