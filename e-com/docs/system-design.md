@@ -1,90 +1,91 @@
-# System design — Comercio electrónico
+# System design — Online store
 
-Fuente: SRS de Nativa 360, capítulo IV (diseño). El stack y el estado actual
-del scaffold están en [`../AGENTS.md`](../AGENTS.md). El modelo de datos y los
-endpoints están en
+Source: Nativa 360 SRS, chapter IV (design). The stack and the current state
+of the scaffold are in [`../AGENTS.md`](../AGENTS.md). The data model and
+endpoints are in
 [`../../backend/docs/system-design.md`](../../backend/docs/system-design.md).
 
-## Lugar en la solución
+## Place in the solution
 
 ```
-Cliente (navegador) ──► e-com (Next.js en Vercel) ──► API pública (NestJS)
+Customer (browser) ──► e-com (Next.js on Vercel) ──► public API (NestJS)
         │                      │
-        │                      └──► Supabase Auth (cuenta del cliente)
-        └──► WhatsApp (enlace wa.me, coordinación manual)
+        │                      └──► Supabase Auth (customer account)
+        └──► WhatsApp (wa.me link, manual coordination)
 ```
 
-El e-com es la capa de presentación del cliente. Lee el catálogo de la API,
-guarda el carrito en el navegador y manda el pedido final a la API, que
-valida productos, precios y cantidades. WhatsApp es solo un enlace: no hay
-integración.
+The online store is the customer's presentation layer. It reads the catalog
+from the API, keeps the cart in the browser and sends the final order to the
+API, which validates products, prices and quantities. WhatsApp is just a
+link: there is no integration.
 
 ## Stack
 
-Next.js (App Router) + TypeScript + Tailwind CSS, TanStack Query para datos
-del servidor, React Hook Form + Zod para formularios, `@supabase/supabase-js`
-para la cuenta del cliente, Vitest + Testing Library para tests. Detalle en
+Next.js (App Router) + TypeScript + Tailwind CSS, TanStack Query for server
+data, React Hook Form + Zod for forms, `@supabase/supabase-js` for the
+customer account, Vitest + Testing Library for tests. Details in
 `../AGENTS.md`.
 
-## Rutas
+## Routes
 
-| Ruta                     | Pantalla                                                | Sesión | HU           |
-| ------------------------ | ------------------------------------------------------- | ------ | ------------ |
-| `/`                      | Catálogo con búsqueda y filtro por categoría            | No     | HU-02, HU-03 |
-| `/productos/[id]`        | Detalle del producto y botón "Agregar al carrito"       | No     | HU-04, HU-05 |
-| `/carrito`               | Carrito: cantidades, eliminar productos, total estimado | No     | HU-05        |
-| `/checkout`              | Resumen del pedido y confirmación                       | Sí     | HU-06        |
-| `/pedidos/[id]`          | Pedido registrado y botón "Coordinar por WhatsApp"      | Sí     | HU-06, HU-07 |
-| `/mis-pedidos`           | Pedidos del cliente                                     | Sí     | HU-06        |
-| `/ingresar`, `/registro` | Inicio de sesión y creación de cuenta                   | No     | HU-06        |
+| Route                    | Screen                                             | Session | HU                  |
+| ------------------------ | -------------------------------------------------- | ------- | ------------------- |
+| `/`                      | Catalog with search and category filter            | No      | HU-02, HU-03, HU-22 |
+| `/productos/[id]`        | Product details and "Add to cart" button           | No      | HU-04, HU-05        |
+| `/carrito`               | Cart: quantities, remove products, estimated total | No      | HU-05               |
+| `/checkout`              | Order summary and confirmation                     | Yes     | HU-06, HU-23        |
+| `/pedidos/[id]`          | Placed order and "Coordinate via WhatsApp" button  | Yes     | HU-07, HU-26        |
+| `/mis-pedidos`           | The customer's orders                              | Yes     | HU-26               |
+| `/ingresar`, `/registro` | Sign in and sign up                                | No      | HU-24, HU-25        |
 
-Las páginas del catálogo y del detalle se renderizan en el servidor para que
-carguen rápido y se puedan indexar en buscadores.
+Routes are in Spanish because they are visible to customers. The catalog and
+product detail pages are rendered on the server so they load fast and can be
+indexed by search engines.
 
-## Estructura de carpetas
+## Folder structure
 
 ```
 src/
-  app/                    # rutas (App Router)
+  app/                    # routes (App Router)
   features/
-    catalogo/             # listado, búsqueda, filtros, detalle
-    carrito/              # estado del carrito, totales, tests
-    pedidos/              # checkout, confirmación, mis pedidos, enlace WhatsApp
-    cuenta/               # ingreso y registro
+    catalogo/             # listing, search, filters, details
+    carrito/              # cart state, totals, tests
+    pedidos/              # checkout, confirmation, my orders, WhatsApp link
+    cuenta/               # sign in and sign up
   shared/
     components/
-    lib/                  # cliente de la API, cliente de Supabase, formato de precios
+    lib/                  # API client, Supabase client, price formatting
 ```
 
-## Datos y estado
+## Data and state
 
-- **Catálogo:** TanStack Query sobre `GET /productos`, `GET /productos/:id` y
-  `GET /categorias`. La búsqueda y el filtro viven en la URL
-  (`?buscar=…&categoria=…`) para poder compartir el enlace.
-- **Carrito:** estado del cliente guardado en `localStorage` (no necesita
-  cuenta). Guarda `producto_id` y cantidad; el precio y la disponibilidad se
-  vuelven a leer de la API al mostrar el carrito y antes del checkout.
-- **Pedido:** `POST /pedidos` con productos y cantidades. El total que vale
-  es el que calcula el backend. Si la API responde 409 (stock insuficiente,
-  RN-05), se muestra qué producto falló y se deja corregir.
-- **WhatsApp:** después de registrar el pedido se arma un enlace
-  `https://wa.me/<numero>?text=<mensaje>` con el código del pedido, los
-  productos y el total. El número viene de `GET /negocio`. El cliente decide
-  si lo envía.
+- **Catalog:** TanStack Query over `GET /productos`, `GET /productos/:id` and
+  `GET /categorias`. Search and filter live in the URL
+  (`?buscar=…&categoria=…`) so the link can be shared.
+- **Cart:** client state stored in `localStorage` (no account needed). It
+  stores `producto_id` and quantity; price and availability are read again
+  from the API when showing the cart and before checkout.
+- **Order:** `POST /pedidos` with products and quantities. The total that
+  counts is the one calculated by the backend. If the API returns 409 (not
+  enough stock, RN-05), the store shows which product failed and lets the
+  customer fix it.
+- **WhatsApp:** after the order is placed, the store builds a
+  `https://wa.me/<number>?text=<message>` link with the order code, products
+  and total. The number comes from `GET /negocio`. The customer decides
+  whether to send it.
 
-## Manejo de errores
+## Error handling
 
-- Sin conexión con la API: mensaje claro y botón de reintentar; el carrito no
-  se pierde porque está en el navegador.
-- Producto que se deshabilitó mientras estaba en el carrito: se marca como no
-  disponible y no se incluye en el pedido.
-- Datos inválidos en el checkout: se marcan los campos con el mensaje de la
-  API.
+- API unreachable: clear message and retry button; the cart is not lost
+  because it lives in the browser.
+- A product disabled while in the cart: marked as unavailable and left out
+  of the order.
+- Invalid checkout data: fields are marked with the API's message.
 
-## Variables de entorno
+## Environment variables
 
-| Variable                        | Para qué                       |
-| ------------------------------- | ------------------------------ |
-| `NEXT_PUBLIC_API_URL`           | URL de la API.                 |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Proyecto de Supabase (cuenta). |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clave pública de Supabase.     |
+| Variable                        | Purpose                     |
+| ------------------------------- | --------------------------- |
+| `NEXT_PUBLIC_API_URL`           | API URL.                    |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project (account). |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public key.        |

@@ -1,91 +1,97 @@
-# Requisitos — Administración y gestión
+# Requirements — Administration panel
 
-Fuente: SRS de Nativa 360, secciones 3.8.2.2 (roles), 3.8.4.3 (requisitos
-funcionales), 3.8.5 (reglas de negocio) y 3.8.7 (requisitos no funcionales).
+Source: Nativa 360 SRS, sections 3.8.2.2 (roles), 3.8.4.3 (functional
+requirements), 3.8.5 (business rules) and 3.8.7 (non-functional
+requirements).
 
-## Propósito
+## Purpose
 
-El panel de administración permite al personal autorizado gestionar
-productos, inventario, pedidos, clientes y el contenido publicado en el sitio
-(información del negocio, promociones, eventos, multimedia y visitas del
-doctor). Cada función está disponible según el rol del usuario.
+The administration panel lets authorized staff manage products, inventory,
+orders, customers and the content published on the site (business
+information, promotions, events, media and doctor visits). Each feature is
+available according to the user's role.
 
-## Usuarios y roles
+## Users and roles
 
-| Rol           | Qué puede hacer                                                                                              |
-| ------------- | ------------------------------------------------------------------------------------------------------------ |
-| Administrador | Todo: productos, precios, inventario, pedidos, clientes, contenido, visitas del doctor, usuarios y permisos. |
-| Empleado      | Consultar productos, actualizar existencias y avanzar los estados de los pedidos. No cambia precios.         |
-| Propietario   | Consultar información y validar el sistema. Funciones administrativas solo si se le asignan.                 |
+| Role          | What they can do                                                                                     |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| Administrator | Everything: products, prices, inventory, orders, customers, content, doctor visits, users and roles. |
+| Employee      | View products, update stock and move orders through their statuses. Cannot change prices.            |
+| Owner         | View information and validate the system. Administrative features only if granted.                   |
 
-## Requisitos funcionales
+## Functional requirements
 
-| Código | Requisito                           | Descripción                                                                             | HU           |
-| ------ | ----------------------------------- | --------------------------------------------------------------------------------------- | ------------ |
-| MO-16  | Agregar productos                   | Registra productos con nombre, descripción, precio, imagen, categoría y disponibilidad. | HU-08        |
-| MO-17  | Modificar productos                 | Actualiza la información de productos existentes.                                       | HU-08        |
-| MO-18  | Deshabilitar productos              | Deshabilita productos que ya no se venden, sin borrar su historial.                     | HU-08        |
-| MO-19  | Administrar imágenes de productos   | Agrega, cambia o actualiza las imágenes de un producto.                                 | HU-08        |
-| MO-20  | Administrar información del negocio | Actualiza la información del negocio que muestra la landing.                            | HU-01, HU-13 |
-| MO-21  | Administrar contenido informativo   | Agrega, modifica y deshabilita promociones, eventos e información publicada.            | HU-13        |
-| MO-22  | Gestionar el inventario             | Consulta y actualiza las cantidades disponibles de los productos.                       | HU-09        |
-| MO-23  | Gestionar pedidos                   | Consulta los pedidos registrados y su información.                                      | HU-10, HU-12 |
-| MO-24  | Actualizar estados de pedidos       | Cambia el estado de un pedido según el avance de su gestión.                            | HU-10        |
-| MO-25  | Consultar información de clientes   | Consulta los clientes y su historial de pedidos.                                        | HU-11, HU-12 |
-| MO-26  | Gestionar usuarios y permisos       | Gestiona las cuentas internas y asigna permisos por rol.                                | HU-15        |
-| MO-27  | Administrar visitas del doctor      | Registra, consulta, modifica, publica y deshabilita visitas del doctor.                 | HU-14        |
+| Code  | Requirement                  | Description                                                                         | HU           |
+| ----- | ---------------------------- | ----------------------------------------------------------------------------------- | ------------ |
+| MO-16 | Add products                 | Registers products with name, description, price, image, category and availability. | HU-08        |
+| MO-17 | Edit products                | Updates existing products.                                                          | HU-08        |
+| MO-18 | Disable products             | Disables products that are no longer sold, without deleting their history.          | HU-08        |
+| MO-19 | Manage product images        | Adds, changes or updates a product's images.                                        | HU-28        |
+| MO-20 | Manage business information  | Updates the business information shown on the landing page.                         | HU-32        |
+| MO-21 | Manage informative content   | Adds, edits and disables promotions, events and published information.              | HU-13, HU-33 |
+| MO-22 | Manage inventory             | Views and updates product stock.                                                    | HU-09        |
+| MO-23 | Manage orders                | Views placed orders and their information.                                          | HU-10, HU-12 |
+| MO-24 | Update order statuses        | Changes an order's status as it is handled.                                         | HU-10        |
+| MO-25 | View customer information    | Views customers and their order history.                                            | HU-11, HU-12 |
+| MO-26 | Manage users and permissions | Manages internal accounts and assigns permissions by role.                          | HU-15        |
+| MO-27 | Manage doctor visits         | Registers, views, edits, publishes and disables doctor visits.                      | HU-14        |
 
-Estados de un pedido (HU-10): **pendiente**, **en revisión**, **confirmado**,
-**preparado**, **entregado** y **cancelado**.
+Derived stories cover the rest of the panel rules: HU-27 (categories,
+MO-08), HU-29 (payment confirmation, RN-14 to RN-17), HU-30 (cancellations
+and refunds, RN-33), HU-31 (manual discounts, RN-23) and HU-34 (sign in and
+out, SRS 4.8).
 
-## Reglas de negocio que aplican
+Order statuses (HU-10): **pending**, **in review**, **confirmed**,
+**prepared**, **delivered** and **cancelled**.
 
-| Código | Regla                                                                                             |
-| ------ | ------------------------------------------------------------------------------------------------- |
-| RN-01  | Cada producto tiene un código único.                                                              |
-| RN-03  | Todo producto registra como mínimo nombre, descripción, precio e imagen.                          |
-| RN-04  | Se puede actualizar la cantidad disponible de cada producto.                                      |
-| RN-06  | Todo ajuste de inventario registra el motivo y el usuario responsable.                            |
-| RN-10  | La disponibilidad final de los productos de un pedido la verifica manualmente el personal.        |
-| RN-13  | Si un producto no está disponible, el personal se lo informa al cliente durante la coordinación.  |
-| RN-14  | Un comprobante por WhatsApp no alcanza: una persona autorizada verifica que el dinero se recibió. |
-| RN-15  | Solo el administrador o un empleado autorizado confirma el pago de un pedido.                     |
-| RN-16  | Un pedido solo se envía cuando su pago está completo.                                             |
-| RN-17  | El importe recibido debe coincidir con el total para considerar el pedido pagado.                 |
-| RN-21  | No se acumulan dos promociones sobre un mismo producto.                                           |
-| RN-23  | Solo el administrador autoriza descuentos manuales sobre un pedido.                               |
-| RN-27  | Los empleados actualizan existencias, pero no modifican precios ni autorizan descuentos.          |
-| RN-28  | Solo el administrador asigna o cambia roles.                                                      |
-| RN-33  | Cancelar un pedido pagado requiere revisar el reembolso.                                          |
-| RN-34  | La hora de fin de una visita del doctor es posterior a la de inicio.                              |
-| RN-35  | Solo se publican visitas con fecha y horario confirmados.                                         |
-| RN-36  | Una visita cancelada deja de anunciarse.                                                          |
-| RN-37  | La fecha y hora de fin de un evento son posteriores a su inicio.                                  |
-| RN-38  | Todo evento presencial indica una ubicación antes de publicarse.                                  |
-| RN-39  | Solo el personal autorizado publica o retira contenido multimedia.                                |
-| RN-41  | La fecha de fin de una publicación, si existe, es posterior a la de inicio.                       |
+## Business rules
 
-## Requisitos no funcionales
+| Code  | Rule                                                                                              |
+| ----- | ------------------------------------------------------------------------------------------------- |
+| RN-01 | Each product has a unique code.                                                                   |
+| RN-03 | Every product has at least a name, description, price and image.                                  |
+| RN-04 | Each product's available quantity can be updated.                                                 |
+| RN-06 | Every inventory adjustment records the reason and the responsible user.                           |
+| RN-10 | Final availability of an order's products is checked manually by the staff.                       |
+| RN-13 | If a product is not available, the staff tells the customer while coordinating the order.         |
+| RN-14 | A receipt sent over WhatsApp is not enough: an authorized person verifies the money was received. |
+| RN-15 | Only the administrator or an authorized employee confirms an order's payment.                     |
+| RN-16 | An order is only shipped once it is fully paid.                                                   |
+| RN-17 | The amount received must match the order total for it to count as paid.                           |
+| RN-21 | Two promotions cannot stack on the same product.                                                  |
+| RN-23 | Only the administrator authorizes manual discounts on an order.                                   |
+| RN-27 | Employees update stock but cannot change prices or authorize discounts.                           |
+| RN-28 | Only the administrator assigns or changes roles.                                                  |
+| RN-33 | Cancelling a paid order requires reviewing the refund.                                            |
+| RN-34 | A doctor visit's end time is after its start time.                                                |
+| RN-35 | Only visits with a confirmed date and time are published.                                         |
+| RN-36 | A cancelled visit is no longer announced.                                                         |
+| RN-37 | An event's end date and time are after its start.                                                 |
+| RN-38 | Every in-person event has a location before it is published.                                      |
+| RN-39 | Only authorized staff publish or unpublish media content.                                         |
+| RN-41 | A publication's end date, if any, is after its start date.                                        |
 
-| Código | Tipo           | Cómo aplica al admin                                                                            |
-| ------ | -------------- | ----------------------------------------------------------------------------------------------- |
-| RNF-01 | Seguridad      | Requiere inicio de sesión; cada pantalla y acción se restringe según el rol.                    |
-| RNF-04 | Recuperación   | Las acciones importantes (precios, inventario, estados) quedan registradas con usuario y fecha. |
-| RNF-05 | Usabilidad     | Pensado para personal sin conocimientos técnicos; campos obligatorios marcados; errores claros. |
-| RNF-06 | Accesibilidad  | Usable en computadora y tableta; responsivo en celular para consultas rápidas.                  |
-| RNF-08 | Mantenibilidad | Módulos separados por dominio (productos, inventario, pedidos, clientes, contenido, usuarios).  |
+## Non-functional requirements
 
-## Fuera de alcance
+| Code   | Type            | How it applies to the admin panel                                                 |
+| ------ | --------------- | --------------------------------------------------------------------------------- |
+| RNF-01 | Security        | Login required; every screen and action is restricted by role.                    |
+| RNF-04 | Recovery        | Important actions (prices, inventory, statuses) are recorded with user and date.  |
+| RNF-05 | Usability       | Built for non-technical staff; required fields marked; clear error messages.      |
+| RNF-06 | Accessibility   | Usable on desktop and tablet; responsive on phones for quick checks.              |
+| RNF-08 | Maintainability | Modules split by domain (products, inventory, orders, customers, content, users). |
 
-- Envío automático de mensajes al cliente o confirmación automática de pagos.
-- Gestión de citas o reservas con el doctor (HU-14 solo publica la visita).
-- Borrado definitivo de productos o pedidos: se deshabilitan para conservar
-  el historial.
+## Out of scope
 
-## Pendientes de confirmar
+- Automatic messages to customers or automatic payment confirmation.
+- Doctor appointment booking (HU-14 only publishes the visit).
+- Permanently deleting products or orders: they are disabled to keep the
+  history.
 
-- Si el empleado puede registrar productos nuevos o solo actualizarlos.
-- Qué estados de pedido puede cambiar el empleado y cuáles solo el
-  administrador (por ejemplo, confirmar pago o cancelar).
-- Si las entradas, salidas y ajustes de inventario de HU-09 entran en la
-  primera versión ("según el alcance definido").
+## Open questions
+
+- Whether employees can create new products or only update them.
+- Which order statuses employees can change and which only the
+  administrator can (for example, confirming payment or cancelling).
+- Whether inventory entries, exits and adjustments from HU-09 are part of
+  the first version ("according to the defined scope").

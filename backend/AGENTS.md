@@ -11,12 +11,15 @@ Antes de crear un módulo, endpoint o tabla, leé [`docs/`](docs/):
   API, reglas de negocio que hace cumplir y requisitos no funcionales.
 - [`docs/system-design.md`](docs/system-design.md): módulos, modelo de datos,
   endpoints, formato de errores y seguridad.
-- [`docs/epics/`](docs/epics/): épicas y la parte de la API de cada HU, con
-  escenarios Gherkin. Cada escenario es un criterio de aceptación y necesita
-  su test (unitario o e2e).
+- [`docs/epics.md`](docs/epics.md): las épicas de la API (EP-21 a EP-28), una por
+  módulo.
+- [`docs/user-stories.md`](docs/user-stories.md): la parte de la API de cada
+  HU, con escenarios Gherkin. Cada escenario es un criterio de aceptación y
+  necesita su test (unitario o e2e).
 
-Cada HU de la API enlaza a su HU de frontend (`../admin/docs/`,
-`../e-com/docs/`, `../landing/docs/`). Las reglas de negocio y los permisos
+Cada HU de la API usa el mismo código que su HU de frontend
+(`../admin/docs/user-stories.md`, `../e-com/docs/user-stories.md`,
+`../landing/docs/user-stories.md`). Las reglas de negocio y los permisos
 se validan acá aunque el frontend también los valide. Si cambia un endpoint,
 una tabla o un escenario, actualizá el documento en el mismo PR.
 

@@ -1,83 +1,83 @@
-# Requisitos — API (backend)
+# Requirements — API (backend)
 
-Fuente: SRS de Nativa 360, secciones 3.8.3.3 y 3.8.3.4 (interfaces), 3.8.4
-(requisitos funcionales), 3.8.5 (datos y reglas de negocio) y 3.8.7
-(requisitos no funcionales).
+Source: Nativa 360 SRS, sections 3.8.3.3 and 3.8.3.4 (interfaces), 3.8.4
+(functional requirements), 3.8.5 (data and business rules) and 3.8.7
+(non-functional requirements).
 
-## Propósito
+## Purpose
 
-La API es la única puerta a los datos de Nativa 360. La usan los tres
-frontends (`landing`, `e-com`, `admin`) para consultar y actualizar
-productos, inventario, pedidos, clientes, usuarios y contenido. Es también
-donde se **hacen cumplir las reglas de negocio y los permisos**: los
-frontends pueden validar para dar mejor experiencia, pero la decisión final
-es siempre del backend.
+The API is the only door to Nativa 360's data. The three frontends
+(`landing`, `e-com`, `admin`) use it to read and update products, inventory,
+orders, customers, users and content. It is also where **business rules and
+permissions are enforced**: frontends may validate for a better experience,
+but the final decision always belongs to the backend.
 
-## Consumidores
+## Consumers
 
-| Consumidor | Acceso                           | Usa la API para                                                                 |
-| ---------- | -------------------------------- | ------------------------------------------------------------------------------- |
-| `landing`  | Público                          | Información del negocio, productos destacados, visitas del doctor, contenido.   |
-| `e-com`    | Público y cliente autenticado    | Catálogo, búsqueda, detalle, registro de pedidos y consulta de pedidos propios. |
-| `admin`    | Personal autenticado (según rol) | Gestión de productos, inventario, pedidos, clientes, contenido y usuarios.      |
+| Consumer  | Access                             | Uses the API for                                                       |
+| --------- | ---------------------------------- | ---------------------------------------------------------------------- |
+| `landing` | Public                             | Business information, featured products, doctor visits, content.       |
+| `e-com`   | Public and authenticated customers | Catalog, search, details, placing orders and viewing their own orders. |
+| `admin`   | Authenticated staff (by role)      | Managing products, inventory, orders, customers, content and users.    |
 
-## Requisitos funcionales por recurso
+## Functional requirements by resource
 
-| Recurso                   | Operaciones                                                                 | Requisitos SRS               | HU                  |
-| ------------------------- | --------------------------------------------------------------------------- | ---------------------------- | ------------------- |
-| Información del negocio   | Consultar (público); actualizar (admin)                                     | MO-01, MO-02, MO-20          | HU-01               |
-| Productos                 | Listar, buscar, filtrar, ver detalle (público); crear, editar, deshabilitar | MO-03, MO-06…MO-09, MO-16…19 | HU-02…HU-04, HU-08  |
-| Categorías                | Listar (público); administrar (admin)                                       | MO-08                        | HU-03, HU-08        |
-| Inventario                | Consultar y ajustar existencias con motivo y usuario                        | MO-22                        | HU-09               |
-| Pedidos                   | Registrar (cliente); listar propios (cliente); listar, ver y cambiar estado | MO-14, MO-23, MO-24          | HU-06, HU-10, HU-12 |
-| Clientes                  | Registro de cuenta (cliente); consultar clientes e historial (admin)        | MO-25                        | HU-06, HU-11        |
-| Promociones y eventos     | Listar vigentes (público); crear, editar, deshabilitar (admin)              | MO-21                        | HU-13               |
-| Contenido multimedia      | Listar publicado (público); publicar y retirar (admin)                      | MO-21                        | HU-13               |
-| Visitas del doctor        | Listar confirmadas (público); crear, editar, publicar, deshabilitar (admin) | MO-06 (landing), MO-27       | HU-14               |
-| Usuarios internos y roles | Crear, editar, activar, deshabilitar, asignar rol (solo administrador)      | MO-26                        | HU-15               |
+| Resource                 | Operations                                                          | SRS requirements             | HU                           |
+| ------------------------ | ------------------------------------------------------------------- | ---------------------------- | ---------------------------- |
+| Business information     | Read (public); update (admin)                                       | MO-01, MO-02, MO-20          | HU-01, HU-32                 |
+| Products                 | List, search, filter, details (public); create, edit, disable       | MO-03, MO-06…MO-09, MO-16…19 | HU-02…04, 08, 16, 22, 28     |
+| Categories               | List (public); manage (admin)                                       | MO-08                        | HU-03, HU-27                 |
+| Inventory                | Read and adjust stock with reason and user                          | MO-22                        | HU-09                        |
+| Orders                   | Place (customer); list own (customer); list, view and change status | MO-14, MO-23, MO-24          | HU-06, 10, 12, 23, 26, 29–31 |
+| Customers                | Account sign-up (customer); view customers and history (admin)      | MO-25                        | HU-11, HU-24, HU-25          |
+| Promotions and events    | List active (public); create, edit, disable (admin)                 | MO-21                        | HU-13, HU-21                 |
+| Media content            | List published (public); publish and unpublish (admin)              | MO-21                        | HU-33                        |
+| Doctor visits            | List confirmed (public); create, edit, publish, disable (admin)     | MO-06 (landing), MO-27       | HU-14, HU-20                 |
+| Internal users and roles | Create, edit, enable, disable, assign role (administrator only)     | MO-26                        | HU-15, HU-34                 |
 
-El carrito (HU-05) vive en el navegador del cliente: la API solo recibe el
-pedido final y valida productos, precios y cantidades.
+The cart (HU-05) lives in the customer's browser: the API only receives the
+final order and validates products, prices and quantities.
 
-## Reglas de negocio que la API hace cumplir
+## Business rules enforced by the API
 
-| Código       | Regla                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------- |
-| RN-01        | Código de producto único.                                                                          |
-| RN-02        | Los endpoints públicos solo devuelven productos activos.                                           |
-| RN-03        | Producto con nombre, descripción, precio e imagen obligatorios.                                    |
-| RN-05        | Rechaza pedidos con cantidades mayores al inventario disponible.                                   |
-| RN-06        | Cada ajuste de inventario guarda motivo y usuario responsable.                                     |
-| RN-09        | El pedido guarda productos, cantidades y total estimado (calculado en el servidor).                |
-| RN-12        | Registrar un pedido no descuenta ni reserva inventario.                                            |
-| RN-15…RN-17  | Solo administrador o empleado autorizado confirma pagos; el importe debe coincidir con el total.   |
-| RN-19…RN-21  | Promociones solo vigentes, solo sobre sus productos o categorías, sin acumularse.                  |
-| RN-23, RN-27 | Empleados no cambian precios ni autorizan descuentos; solo el administrador.                       |
-| RN-24, RN-26 | Pedidos solo con cuenta de cliente; cada cliente ve solo sus pedidos.                              |
-| RN-28        | Solo el administrador asigna o cambia roles.                                                       |
-| RN-34…RN-38  | Fechas y horas de fin posteriores al inicio; solo se publica lo confirmado; eventos con ubicación. |
-| RN-40…RN-42  | El contenido público respeta su período de publicación y deja de verse al retirarse.               |
+| Code         | Rule                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------ |
+| RN-01        | Unique product code.                                                                             |
+| RN-02        | Public endpoints only return active products.                                                    |
+| RN-03        | Name, description, price and image are required for a product.                                   |
+| RN-05        | Rejects orders for more units than are in stock.                                                 |
+| RN-06        | Every inventory adjustment stores the reason and the responsible user.                           |
+| RN-09        | The order stores products, quantities and the estimated total (calculated on the server).        |
+| RN-12        | Placing an order does not deduct or reserve stock.                                               |
+| RN-15…RN-17  | Only an administrator or authorized employee confirms payments; the amount must match.           |
+| RN-19…RN-21  | Promotions only while active, only on their products or categories, never stacked.               |
+| RN-23, RN-27 | Employees cannot change prices or authorize discounts; only the administrator can.               |
+| RN-24, RN-26 | Orders require a customer account; each customer only sees their own orders.                     |
+| RN-28        | Only the administrator assigns or changes roles.                                                 |
+| RN-34…RN-38  | End dates and times after the start; only confirmed items are published; events need a location. |
+| RN-40…RN-42  | Public content respects its publication period and disappears when unpublished.                  |
 
-## Requisitos no funcionales
+## Non-functional requirements
 
-| Código | Tipo           | Cómo aplica a la API                                                                                                    |
-| ------ | -------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| RNF-01 | Seguridad      | Autenticación con Supabase Auth (JWT); autorización por rol en cada endpoint; validación de toda entrada; CORS cerrado. |
-| RNF-02 | Rendimiento    | Paginación en listados; índices para búsqueda y filtros; cache para lecturas públicas.                                  |
-| RNF-03 | Disponibilidad | Endpoint `/health` para monitoreo; errores con formato consistente que los frontends puedan mostrar.                    |
-| RNF-04 | Recuperación   | Base de datos con respaldos antes de producción; las operaciones confirmadas no se pierden ante fallos temporales.      |
-| RNF-07 | Escalabilidad  | Un módulo de NestJS por recurso; nuevas funciones sin reestructurar lo existente.                                       |
-| RNF-08 | Mantenibilidad | Contrato documentado en Swagger (`/docs`); tests unitarios y e2e.                                                       |
+| Code   | Type            | How it applies to the API                                                                                                  |
+| ------ | --------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | Security        | Authentication with Supabase Auth (JWT); role-based authorization on every endpoint; all input validated; restricted CORS. |
+| RNF-02 | Performance     | Paginated lists; indexes for search and filters; cache for public reads.                                                   |
+| RNF-03 | Availability    | `/health` endpoint for monitoring; consistent error format the frontends can display.                                      |
+| RNF-04 | Recovery        | Database backups before production; confirmed operations are not lost on temporary failures.                               |
+| RNF-07 | Scalability     | One NestJS module per resource; new features without restructuring existing ones.                                          |
+| RNF-08 | Maintainability | Contract documented in Swagger (`/docs`); unit and e2e tests.                                                              |
 
-## Fuera de alcance
+## Out of scope
 
-- Procesamiento de pagos en línea.
-- Envío de mensajes de WhatsApp o integraciones con su API.
-- Reserva automática de inventario (RN-12).
+- Online payment processing.
+- Sending WhatsApp messages or integrating with its API.
+- Automatic stock reservation (RN-12).
 
-## Pendientes de confirmar
+## Open questions
 
-- Si el pedido descuenta inventario al pasar a **confirmado** o al pasar a
-  **entregado** (RN-12 solo dice que no se reserva mientras está pendiente).
-- Entregas a domicilio (RN-29 a RN-32): si entran en la primera versión, el
-  pedido necesita tipo de entrega, dirección y costo de envío.
+- Whether an order deducts stock when it becomes **confirmed** or when it
+  becomes **delivered** (RN-12 only says stock is not reserved while
+  pending).
+- Home delivery (RN-29 to RN-32): if it is part of the first version, orders
+  need a delivery type, address and shipping cost.

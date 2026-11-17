@@ -1,76 +1,75 @@
-# System design — Landing Page
+# System design — Landing page
 
-Fuente: SRS de Nativa 360, capítulo IV (diseño). El stack y el estado actual
-del scaffold están en [`../AGENTS.md`](../AGENTS.md). Los endpoints están en
+Source: Nativa 360 SRS, chapter IV (design). The stack and the current state
+of the scaffold are in [`../AGENTS.md`](../AGENTS.md). The endpoints are in
 [`../../backend/docs/system-design.md`](../../backend/docs/system-design.md).
 
-## Lugar en la solución
+## Place in the solution
 
 ```
-Visitante (navegador) ──► landing (Next.js en Vercel) ──► API pública (NestJS)
-         │
-         ├──► e-com (botón "Ver tienda")
-         ├──► WhatsApp (enlace wa.me)
-         └──► Instagram / Facebook (enlaces)
+Visitor (browser) ──► landing (Next.js on Vercel) ──► public API (NestJS)
+       │
+       ├──► e-com ("Ver tienda" button)
+       ├──► WhatsApp (wa.me link)
+       └──► Instagram / Facebook (links)
 ```
 
-La landing solo **lee** información pública de la API. No tiene sesión ni
-formularios que guarden datos. Todo lo que muestra se administra desde
+The landing page only **reads** public information from the API. It has no
+session and no forms that store data. Everything it shows is managed from
 `admin`.
 
 ## Stack
 
 Next.js (App Router) + TypeScript + Tailwind CSS, Vitest + Testing Library
-para tests. Detalle en `../AGENTS.md`.
+for tests. Details in `../AGENTS.md`.
 
-## Página y secciones
+## Page and sections
 
-Una sola página (`/`) con secciones:
+A single page (`/`) with sections:
 
-| Sección               | Contenido                                                     | Datos (API)                    | Requisito   |
-| --------------------- | ------------------------------------------------------------- | ------------------------------ | ----------- |
-| Encabezado            | Logo, menú a las secciones, botón "Ver tienda"                | —                              | MO-05       |
-| Presentación          | Quiénes son y qué venden                                      | `GET /negocio`                 | MO-01       |
-| Productos destacados  | Tarjetas con nombre, imagen, descripción y precio             | `GET /productos/destacados`    | MO-03       |
-| Promociones y eventos | Solo los vigentes (si se confirma que van en la landing)      | `GET /promociones`, `/eventos` | HU-13       |
-| Visitas del doctor    | Próximas visitas confirmadas                                  | `GET /visitas-doctor`          | MO-06       |
-| Contacto              | Teléfono, dirección, mapa, redes sociales y botón de WhatsApp | `GET /negocio`                 | MO-01…MO-04 |
-| Pie de página         | Redes sociales y datos de contacto                            | `GET /negocio`                 | MO-02       |
+| Section               | Content                                               | Data (API)                     | Story        |
+| --------------------- | ----------------------------------------------------- | ------------------------------ | ------------ |
+| Header                | Logo, menu to the sections, "Ver tienda" button       | —                              | HU-19        |
+| Introduction          | Who they are and what they sell                       | `GET /negocio`                 | HU-01        |
+| Featured products     | Cards with name, image, description and price         | `GET /productos/destacados`    | HU-16        |
+| Promotions and events | Active ones only (if confirmed for the landing page)  | `GET /promociones`, `/eventos` | HU-21        |
+| Doctor visits         | Upcoming confirmed visits                             | `GET /visitas-doctor`          | HU-20        |
+| Contact               | Phone, address, map, social media and WhatsApp button | `GET /negocio`                 | HU-01, HU-17 |
+| Footer                | Social media and contact data                         | `GET /negocio`                 | HU-18        |
 
-## Renderizado y datos
+## Rendering and data
 
-- Se renderiza en el servidor con revalidación periódica (ISR), para que
-  cargue rápido y se indexe en buscadores, sin pedirle datos a la API en cada
-  visita.
-- Cada sección que depende de la API funciona por separado: si una falla, se
-  oculta esa sección y el resto de la página sigue visible.
-- La información mínima de contacto (teléfono y WhatsApp) tiene un valor de
-  respaldo para que nunca quede vacía.
-- Las imágenes usan `next/image` para servirlas optimizadas.
+- Server-rendered with periodic revalidation (ISR), so it loads fast and is
+  indexed by search engines without hitting the API on every visit.
+- Each section that depends on the API works on its own: if one fails, that
+  section is hidden and the rest of the page stays visible.
+- The minimum contact information (phone and WhatsApp) has a fallback value
+  so it is never empty.
+- Images use `next/image` to be served optimized.
 
-## Estructura de carpetas
+## Folder structure
 
 ```
 src/
   app/
-    page.tsx              # arma las secciones
+    page.tsx              # assembles the sections
   features/
-    negocio/              # presentación, contacto, pie de página
+    negocio/              # introduction, contact, footer
     destacados/
-    contenido/            # promociones y eventos
+    contenido/            # promotions and events
     visitas-doctor/
   shared/
     components/
-    lib/                  # cliente de la API, enlace de WhatsApp
+    lib/                  # API client, WhatsApp link
 ```
 
-## Variables de entorno
+## Environment variables
 
-| Variable               | Para qué                              |
-| ---------------------- | ------------------------------------- |
-| `NEXT_PUBLIC_API_URL`  | URL de la API.                        |
-| `NEXT_PUBLIC_ECOM_URL` | URL del comercio electrónico (botón). |
+| Variable               | Purpose                                 |
+| ---------------------- | --------------------------------------- |
+| `NEXT_PUBLIC_API_URL`  | API URL.                                |
+| `NEXT_PUBLIC_ECOM_URL` | Online store URL ("Ver tienda" button). |
 
-`NEXT_PUBLIC_ECOM_URL` todavía no existe en `.env.local.example`: se agrega
-cuando se implemente el botón "Ver tienda" (HU-01). Las variables de Supabase
-del ejemplo no se usan, porque la landing no tiene sesión.
+`NEXT_PUBLIC_ECOM_URL` is not in `.env.local.example` yet: it is added when
+the "Ver tienda" button is implemented (HU-01). The Supabase variables in the
+example are not used, because the landing page has no session.

@@ -1,64 +1,65 @@
-# Requisitos — Landing Page
+# Requirements — Landing page
 
-Fuente: SRS de Nativa 360, secciones 3.8.4.1 (requisitos funcionales),
-3.8.5 (reglas de negocio) y 3.8.7 (requisitos no funcionales).
+Source: Nativa 360 SRS, sections 3.8.4.1 (functional requirements), 3.8.5
+(business rules) and 3.8.7 (non-functional requirements).
 
-## Propósito
+## Purpose
 
-La landing es el punto de entrada del sitio: presenta a Nativa 360, sus
-medios de contacto y algunos productos destacados, y lleva al visitante al
-comercio electrónico o al WhatsApp del negocio.
+The landing page is the site's entry point: it introduces Nativa 360, its
+contact channels and some featured products, and sends visitors to the
+online store or to the store's WhatsApp.
 
-## Usuarios
+## Users
 
-| Rol       | Qué hace en la landing                                           |
-| --------- | ---------------------------------------------------------------- |
-| Visitante | Cualquier persona, sin cuenta. Consulta información y navega.    |
-| Cliente   | Igual que el visitante; desde acá entra al comercio electrónico. |
+| Role     | What they do on the landing page                      |
+| -------- | ----------------------------------------------------- |
+| Visitor  | Anyone, no account. Reads information and navigates.  |
+| Customer | Same as a visitor; enters the online store from here. |
 
-## Requisitos funcionales
+## Functional requirements
 
-| Código | Requisito                       | Descripción                                                                                                           | HU    |
-| ------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----- |
-| MO-01  | Mostrar información del negocio | Muestra nombre, teléfono, ubicación y medios de contacto de Nativa 360.                                               | HU-01 |
-| MO-02  | Acceder a redes sociales        | Muestra enlaces a las redes sociales oficiales (Instagram, Facebook).                                                 | HU-01 |
-| MO-03  | Mostrar productos destacados    | Muestra una selección de productos destacados con nombre, imagen, descripción y precio.                               | HU-01 |
-| MO-04  | Acceder a WhatsApp              | Un botón abre una conversación de WhatsApp con el negocio. La atención es manual.                                     | HU-01 |
-| MO-05  | Acceder al comercio electrónico | Un botón visible lleva al catálogo del comercio electrónico.                                                          | HU-01 |
-| MO-06  | Mostrar visitas del doctor      | Muestra las visitas del doctor confirmadas: nombre, especialidad, fecha y horario. Se administran en `admin` (HU-14). | HU-14 |
+| Code  | Requirement               | Description                                                                                         | HU    |
+| ----- | ------------------------- | --------------------------------------------------------------------------------------------------- | ----- |
+| MO-01 | Show business information | Shows Nativa 360's name, phone, location and contact channels.                                      | HU-01 |
+| MO-02 | Link to social media      | Shows links to the official social media accounts (Instagram, Facebook).                            | HU-18 |
+| MO-03 | Show featured products    | Shows a selection of featured products with name, image, description and price.                     | HU-16 |
+| MO-04 | Open WhatsApp             | A button opens a WhatsApp conversation with the store. Replies are handled manually.                | HU-17 |
+| MO-05 | Go to the online store    | A visible button takes the visitor to the online store catalog.                                     | HU-19 |
+| MO-06 | Show doctor visits        | Shows confirmed doctor visits: name, specialty, date and time. They are managed in `admin` (HU-14). | HU-20 |
 
-## Reglas de negocio que aplican
+## Business rules
 
-| Código | Regla                                                                                 |
-| ------ | ------------------------------------------------------------------------------------- |
-| RN-02  | Solo se muestran productos activos (aplica a los destacados).                         |
-| RN-19  | Una promoción solo se muestra durante su período de vigencia.                         |
-| RN-35  | Solo se publican visitas del doctor con fecha y horario confirmados por el negocio.   |
-| RN-36  | Una visita cancelada deja de anunciarse.                                              |
-| RN-40  | El contenido con período de publicación definido solo se muestra durante ese período. |
-| RN-42  | El contenido retirado de publicación deja de mostrarse.                               |
+| Code  | Rule                                                                          |
+| ----- | ----------------------------------------------------------------------------- |
+| RN-02 | Only active products are shown (applies to featured products).                |
+| RN-19 | A promotion is only shown during its validity period.                         |
+| RN-35 | Only doctor visits with a date and time confirmed by the store are published. |
+| RN-36 | A cancelled visit is no longer announced.                                     |
+| RN-40 | Content with a publication period is only shown during that period.           |
+| RN-42 | Content that is unpublished is no longer shown.                               |
 
-## Requisitos no funcionales
+## Non-functional requirements
 
-| Código | Tipo           | Cómo aplica a la landing                                                                   |
-| ------ | -------------- | ------------------------------------------------------------------------------------------ |
-| RNF-02 | Rendimiento    | Carga rápida; imágenes optimizadas, sobre todo en celulares y conexiones lentas.           |
-| RNF-03 | Disponibilidad | Si la API no responde, la información estática del negocio igual se muestra.               |
-| RNF-05 | Usabilidad     | Navegación simple, sin saturar de información; botones de acción claros.                   |
-| RNF-06 | Accesibilidad  | Responsiva en computadora, tableta y celular; colores y tamaños de texto legibles.         |
-| RNF-09 | Compatibilidad | Funciona en navegadores modernos.                                                          |
-| RNF-10 | Integración    | WhatsApp y redes sociales son enlaces externos: no hay mensajes ni respuestas automáticas. |
+| Code   | Type          | How it applies to the landing page                                              |
+| ------ | ------------- | ------------------------------------------------------------------------------- |
+| RNF-02 | Performance   | Loads fast; optimized images, especially on phones and slow connections.        |
+| RNF-03 | Availability  | If the API is down, the static business information is still shown.             |
+| RNF-05 | Usability     | Simple navigation, no information overload, clear call-to-action buttons.       |
+| RNF-06 | Accessibility | Responsive on desktop, tablet and phone; readable colors and text sizes.        |
+| RNF-09 | Compatibility | Works on modern browsers.                                                       |
+| RNF-10 | Integration   | WhatsApp and social media are external links: no automatic messages or replies. |
 
-## Fuera de alcance
+## Out of scope
 
-- Registro, inicio de sesión o compras desde la landing (eso vive en `e-com`).
-- Mensajes automáticos o chatbots de WhatsApp.
-- Edición de contenido: todo lo que muestra la landing se administra desde
+- Sign-up, login or purchases from the landing page (that lives in `e-com`).
+- Automatic WhatsApp messages or chatbots.
+- Editing content: everything the landing page shows is managed from
   `admin`.
 
-## Pendientes de confirmar
+## Open questions
 
-- El SRS usa el código **MO-06** dos veces (visitas del doctor en la landing y
-  productos disponibles en el e-commerce). Conviene renumerar uno en el SRS.
-- Si las promociones y eventos (HU-13) también se muestran en la landing o
-  solo en el e-commerce.
+- The SRS uses the code **MO-06** twice (doctor visits on the landing page
+  and available products in the online store). One of them should be
+  renumbered in the SRS.
+- Whether promotions and events (HU-21) are also shown on the landing page or
+  only in the online store.

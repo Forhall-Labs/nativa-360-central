@@ -12,8 +12,11 @@ Antes de construir una pantalla o una HU, leé [`docs/`](docs/):
   de pedidos y enlace de WhatsApp.
 - [`docs/ui-spec.md`](docs/ui-spec.md): identidad visual y comportamiento de
   cada pantalla del flujo de compra.
-- [`docs/epics/`](docs/epics/): épicas e HU-02 a HU-07 con escenarios
-  Gherkin. Cada escenario es un criterio de aceptación y necesita su test.
+- [`docs/epics.md`](docs/epics.md): las épicas del comercio electrónico
+  (EP-06 a EP-12).
+- [`docs/user-stories.md`](docs/user-stories.md): HU-02 a HU-07 y HU-22 a HU-26, con
+  escenarios Gherkin. Cada escenario es un criterio de aceptación y necesita
+  su test.
 
 La contraparte de cada HU en la API está en
 [`../backend/docs/`](../backend/docs/). El índice de todo el proyecto está en

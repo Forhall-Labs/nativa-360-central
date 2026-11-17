@@ -1,84 +1,113 @@
-# Documentación de Nativa 360
+# Nativa 360 documentation
 
-Punto de entrada a la documentación funcional y de diseño del proyecto. Si sos
-una persona o una IA que va a trabajar en el repo, empezá acá: este archivo te
-dice **qué proyecto resuelve cada cosa** y **qué documento leer** antes de
-tocar código.
+Entry point to the functional and design documentation. If you are a person
+or an AI about to work on this repo, start here: this file tells you **which
+project owns each feature** and **which document to read** before touching
+code.
 
-La fuente de verdad de los requisitos es el documento formal (SRS) del
-proyecto. Los archivos de `docs/` lo bajan a cada proyecto en un formato que
-se puede versionar y que la IA puede leer por partes.
+The source of truth for requirements is the project's formal SRS document.
+The files under `docs/` break it down per project in a format that can be
+versioned and read by an AI in parts.
 
-## El negocio en una línea
+## The business in one line
 
-Nativa 360 es una macrobiótica de Pérez Zeledón que vende suplementos,
-vitaminas, productos naturales y artículos de cuidado personal. La solución
-web le da presencia en línea, un catálogo con pedidos para recoger en tienda
-(pago y coordinación manual por WhatsApp) y un panel interno para gestionar
-productos, inventario, pedidos y contenido.
+Nativa 360 is a macrobiotic store in Pérez Zeledón that sells supplements,
+vitamins, natural products and personal care items. The web solution gives
+it an online presence, a catalog with orders for in-store pickup (payment
+and coordination are handled manually over WhatsApp) and an internal panel
+to manage products, inventory, orders and content.
 
-## Proyectos
+## Projects
 
-| Proyecto   | Qué es                                      | Usuarios                            | Documentación                       |
-| ---------- | ------------------------------------------- | ----------------------------------- | ----------------------------------- |
-| `landing/` | Página de presentación del negocio          | Clientes y visitantes               | [`landing/docs/`](../landing/docs/) |
-| `e-com/`   | Tienda en línea: catálogo, carrito, pedidos | Clientes                            | [`e-com/docs/`](../e-com/docs/)     |
-| `admin/`   | Panel de administración y gestión           | Empleados, administrador, dueño     | [`admin/docs/`](../admin/docs/)     |
-| `backend/` | API que usan los tres frontends             | Los frontends (no usuarios finales) | [`backend/docs/`](../backend/docs/) |
+| Project    | What it is                          | Users                           | Documentation                       |
+| ---------- | ----------------------------------- | ------------------------------- | ----------------------------------- |
+| `landing/` | Business presentation page          | Customers and visitors          | [`landing/docs/`](../landing/docs/) |
+| `e-com/`   | Online store: catalog, cart, orders | Customers                       | [`e-com/docs/`](../e-com/docs/)     |
+| `admin/`   | Administration and management panel | Employees, administrator, owner | [`admin/docs/`](../admin/docs/)     |
+| `backend/` | API used by the three frontends     | The frontends (not end users)   | [`backend/docs/`](../backend/docs/) |
 
-## Qué leer según la tarea
+## What to read for each task
 
-| Si la tarea es…                                  | Leé primero                                                                                              |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| Implementar una historia de usuario (HU)         | `<proyecto>/docs/epics/<épica>/stories/<HU>.md` y la `epic.md` de su carpeta                             |
-| Entender qué debe hacer un proyecto              | `<proyecto>/docs/requirements.md`                                                                        |
-| Agregar un módulo, endpoint, tabla o integración | `<proyecto>/docs/system-design.md` y [`backend/docs/system-design.md`](../backend/docs/system-design.md) |
-| Construir o cambiar una pantalla                 | `<proyecto>/docs/ui-spec.md` (solo `landing`, `e-com` y `admin`)                                         |
-| Configurar el entorno, el flujo de Git o el CI   | [`README.md`](../README.md) y [`AGENTS.md`](../AGENTS.md) de la raíz                                     |
-| Entender la nota del PR                          | [`PR_SCORE.md`](PR_SCORE.md)                                                                             |
+| If the task is…                                 | Read first                                                                                                |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Implementing a user story (HU)                  | `<project>/docs/user-stories.md` (the story) and `<project>/docs/epics.md` (its epic)                     |
+| Understanding what a project must do            | `<project>/docs/requirements.md`                                                                          |
+| Adding a module, endpoint, table or integration | `<project>/docs/system-design.md` and [`backend/docs/system-design.md`](../backend/docs/system-design.md) |
+| Building or changing a screen                   | `<project>/docs/ui-spec.md` (only `landing`, `e-com` and `admin`)                                         |
+| Setting up the environment, Git flow or CI      | [`README.md`](../README.md) and [`AGENTS.md`](../AGENTS.md) at the repo root                              |
+| Understanding the PR score                      | [`PR_SCORE.md`](PR_SCORE.md)                                                                              |
 
-Una HU de frontend casi siempre tiene su contraparte en el backend: revisá
-las dos carpetas antes de empezar.
+A frontend story almost always has a backend counterpart: check
+`backend/docs/user-stories.md` for the same HU before starting.
 
-## Mapa de historias de usuario
+## User story map
 
-| HU    | Nombre                                | Proyecto(s)               | Sprint                      |
-| ----- | ------------------------------------- | ------------------------- | --------------------------- |
-| HU-01 | Consultar información del negocio     | landing · admin · backend | 2 · Landing page            |
-| HU-02 | Consultar catálogo de productos       | e-com · backend           | 3 · Catálogo                |
-| HU-03 | Buscar y filtrar productos            | e-com · backend           | 3 · Catálogo                |
-| HU-04 | Consultar el detalle de un producto   | e-com · backend           | 3 · Catálogo                |
-| HU-05 | Agregar productos al carrito          | e-com · backend           | 4 · Carrito y pedidos       |
-| HU-06 | Registrar un pedido                   | e-com · backend           | 4 · Carrito y pedidos       |
-| HU-07 | Coordinar un pedido mediante WhatsApp | e-com                     | 4 · Carrito y pedidos       |
-| HU-08 | Administrar productos                 | admin · backend           | 5 · Gestión administrativa  |
-| HU-09 | Gestionar el inventario               | admin · backend           | 5 · Gestión administrativa  |
-| HU-10 | Actualizar el estado de un pedido     | admin · backend           | 5 · Gestión administrativa  |
-| HU-11 | Consultar información de clientes     | admin · backend           | 6 · Clientes y contenido    |
-| HU-12 | Consultar el historial de pedidos     | admin · backend           | 6 · Clientes y contenido    |
-| HU-13 | Administrar promociones y eventos     | admin · backend           | 6 · Clientes y contenido    |
-| HU-14 | Administrar visitas del doctor        | admin · landing · backend | 6 · Clientes y contenido    |
-| HU-15 | Gestionar usuarios y permisos         | admin · backend           | 7 · Integración y seguridad |
+HU-01 to HU-15 come from the SRS (section 3.7). HU-16 on are **derived from
+the SRS**: they cover SRS requirements or business rules that had no story
+of their own, and must be added to the SRS backlog.
 
-## Estructura de cada `docs/` de proyecto
+| HU    | Name                                 | Epic (frontend)                  | Project(s)        | Sprint                       |
+| ----- | ------------------------------------ | -------------------------------- | ----------------- | ---------------------------- |
+| HU-01 | View business information            | EP-01 Business presentation      | landing · backend | 2 · Landing page             |
+| HU-16 | View featured products               | EP-02 Featured products          | landing · backend | 2 · Landing page             |
+| HU-17 | Contact the store on WhatsApp        | EP-03 Contact and social media   | landing           | 2 · Landing page             |
+| HU-18 | Visit the store's social media       | EP-03 Contact and social media   | landing           | 2 · Landing page             |
+| HU-19 | Go to the online store               | EP-04 Navigation to the store    | landing           | 2 · Landing page             |
+| HU-20 | View upcoming doctor visits          | EP-05 Doctor visits and news     | landing · backend | 6 · Customers and content    |
+| HU-21 | View active promotions and events    | EP-05 Doctor visits and news     | landing · backend | 6 · Customers and content    |
+| HU-02 | Browse the product catalog           | EP-06 Catalog                    | e-com · backend   | 3 · Catalog                  |
+| HU-04 | View product details                 | EP-06 Catalog                    | e-com · backend   | 3 · Catalog                  |
+| HU-03 | Search and filter products           | EP-07 Search and filters         | e-com · backend   | 3 · Catalog                  |
+| HU-22 | See promotions in the catalog        | EP-08 Promotions in the store    | e-com · backend   | 6 · Customers and content    |
+| HU-05 | Add products to the cart             | EP-09 Cart                       | e-com             | 4 · Cart and orders          |
+| HU-06 | Place an order                       | EP-10 Checkout and orders        | e-com · backend   | 4 · Cart and orders          |
+| HU-23 | Choose pickup or home delivery       | EP-10 Checkout and orders        | e-com · backend   | 4 · Cart and orders          |
+| HU-07 | Coordinate an order through WhatsApp | EP-11 WhatsApp coordination      | e-com             | 4 · Cart and orders          |
+| HU-24 | Sign up as a customer                | EP-12 Customer account           | e-com · backend   | 4 · Cart and orders          |
+| HU-25 | Sign in and out as a customer        | EP-12 Customer account           | e-com · backend   | 4 · Cart and orders          |
+| HU-26 | View my orders                       | EP-12 Customer account           | e-com · backend   | 6 · Customers and content    |
+| HU-08 | Manage products                      | EP-13 Product catalog management | admin · backend   | 5 · Store management         |
+| HU-27 | Manage categories                    | EP-13 Product catalog management | admin · backend   | 5 · Store management         |
+| HU-28 | Manage product images                | EP-13 Product catalog management | admin · backend   | 5 · Store management         |
+| HU-09 | Manage inventory                     | EP-14 Inventory                  | admin · backend   | 5 · Store management         |
+| HU-10 | Update an order's status             | EP-15 Order management           | admin · backend   | 5 · Store management         |
+| HU-12 | View order history                   | EP-15 Order management           | admin · backend   | 6 · Customers and content    |
+| HU-29 | Confirm an order's payment           | EP-16 Payments and cancellations | admin · backend   | 5 · Store management         |
+| HU-30 | Cancel an order and review a refund  | EP-16 Payments and cancellations | admin · backend   | 5 · Store management         |
+| HU-31 | Apply a manual discount to an order  | EP-16 Payments and cancellations | admin · backend   | 5 · Store management         |
+| HU-11 | View customer information            | EP-17 Customer management        | admin · backend   | 6 · Customers and content    |
+| HU-13 | Manage promotions and events         | EP-18 Site content               | admin · backend   | 6 · Customers and content    |
+| HU-32 | Manage business information          | EP-18 Site content               | admin · backend   | 6 · Customers and content    |
+| HU-33 | Manage media content                 | EP-18 Site content               | admin · backend   | 6 · Customers and content    |
+| HU-14 | Manage doctor visits                 | EP-19 Doctor visits              | admin · backend   | 6 · Customers and content    |
+| HU-15 | Manage users and permissions         | EP-20 Users and access           | admin · backend   | 7 · Integration and security |
+| HU-34 | Sign in and out of the panel         | EP-20 Users and access           | admin · backend   | 7 · Integration and security |
+
+Epics EP-01 to EP-20 are the frontend epics (landing EP-01 to EP-05, e-com
+EP-06 to EP-12, admin EP-13 to EP-20); EP-21 to EP-28 are the API epics, one
+per backend module. Each project's `epics.md` lists its epics and stories,
+and each story in `user-stories.md` links back to its epic.
+
+## Per-project `docs/` structure
 
 ```
-<proyecto>/docs/
-  requirements.md          # requisitos funcionales y no funcionales
-  ui-spec.md               # lineamientos de UI (solo proyectos front)
-  system-design.md         # arquitectura, módulos, integraciones, datos
-  epics/
-    <épica>/
-      epic.md              # épica en formato Connextra
-      stories/<HU>.md      # HU con escenarios Gherkin
+<project>/docs/
+  requirements.md     # functional and non-functional requirements
+  system-design.md    # architecture, modules, integrations, data
+  ui-spec.md          # UI guidelines (frontend projects only)
+  epics.md            # all the project's epics, in Connextra format
+  user-stories.md     # all the project's user stories, with Gherkin scenarios
 ```
 
-## Convenciones
+## Conventions
 
-- **Épicas** en formato Connextra: _Como <rol>, quiero <capacidad>, para
-  <beneficio>._
-- **Historias de usuario** con su enunciado Connextra y escenarios Gherkin en
-  español: al menos uno **positivo**, uno **negativo**, uno **de error** y
-  uno **de validación**.
-- Los identificadores (`HU-01` … `HU-15`) son los del SRS. Si una HU cambia,
-  se actualiza el archivo de la HU y esta tabla en el mismo PR.
+- **Epics** use the Connextra format: _As a <role>, I want <capability>, so
+  that <benefit>._
+- **User stories** have their Connextra statement and Gherkin scenarios with
+  at least one **positive**, one **negative**, one **error** and one
+  **validation** scenario.
+- Identifiers come from the SRS and are kept in their original form:
+  `HU-xx` (user story), `MO-xx` (functional requirement), `RN-xx` (business
+  rule) and `RNF-xx` (non-functional requirement).
+- If a story changes, update `user-stories.md` (and this table, if needed) in
+  the same PR.

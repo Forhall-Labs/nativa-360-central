@@ -24,16 +24,18 @@ según la tarea. Cada proyecto tiene su `docs/` con:
   [`backend/docs/system-design.md`](backend/docs/system-design.md).
 - `ui-spec.md` (solo `landing`, `e-com` y `admin`): identidad visual y
   comportamiento de las pantallas.
-- `epics/<épica>/epic.md` y `epics/<épica>/stories/HU-xx.md`: épicas en
-  formato Connextra e historias de usuario con escenarios Gherkin.
+- `epics.md`: todas las épicas del proyecto, en formato Connextra.
+- `user-stories.md`: todas las historias de usuario del proyecto, con
+  escenarios Gherkin.
 
 La fuente original es el SRS del proyecto; `docs/` es su versión
-versionada y por proyecto.
+versionada, por proyecto y en inglés.
 
 ### Cómo trabajar una HU (personas e IA)
 
-1. Leé la HU del frontend y su contraparte del backend (cada una enlaza a la
-   otra) y la `epic.md` de su carpeta.
+1. Leé la HU en el `user-stories.md` del frontend, su contraparte en
+   `backend/docs/user-stories.md` (mismo código HU-xx) y su épica en
+   `epics.md`.
 2. Revisá `requirements.md`, `system-design.md` y, si hay pantallas,
    `ui-spec.md` del proyecto.
 3. Cada escenario Gherkin (positivo, negativo, de error y de validación) es
@@ -41,7 +43,7 @@ versionada y por proyecto.
 4. Si al implementar cambia una regla, un endpoint, una tabla o un
    escenario, actualizá el documento en el mismo PR.
 5. Si algo no está definido, no lo inventes: revisá las secciones
-   "Pendientes de confirmar" o preguntá antes de decidir.
+   "Open questions" o preguntá antes de decidir.
 
 ## Trunk-based development
 

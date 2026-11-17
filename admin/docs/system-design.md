@@ -1,111 +1,111 @@
-# System design — Administración y gestión
+# System design — Administration panel
 
-Fuente: SRS de Nativa 360, capítulo IV (diseño). El stack y el estado actual
-del scaffold están en [`../AGENTS.md`](../AGENTS.md). El modelo de datos y los
-endpoints están en
+Source: Nativa 360 SRS, chapter IV (design). The stack and the current state
+of the scaffold are in [`../AGENTS.md`](../AGENTS.md). The data model and
+endpoints are in
 [`../../backend/docs/system-design.md`](../../backend/docs/system-design.md).
 
-## Lugar en la solución
+## Place in the solution
 
 ```
-Personal (navegador) ──► admin (Next.js en Vercel) ──► API /admin/* (NestJS)
-                               │
-                               └──► Supabase Auth (iniciar y cerrar sesión)
+Staff (browser) ──► admin (Next.js on Vercel) ──► API /admin/* (NestJS)
+                          │
+                          └──► Supabase Auth (sign in and sign out)
 ```
 
-El admin es la capa de presentación del personal. No tiene lógica de negocio
-propia ni acceso directo a la base de datos: todo pasa por la API, que es la
-que valida permisos y reglas. El admin oculta lo que el rol no puede hacer
-para dar una mejor experiencia, pero no reemplaza la validación del backend.
+The admin panel is the staff's presentation layer. It has no business logic
+of its own and no direct database access: everything goes through the API,
+which enforces permissions and rules. The panel hides what a role cannot do
+for a better experience, but it does not replace backend validation.
 
 ## Stack
 
-Next.js (App Router) + TypeScript + Tailwind CSS, TanStack Query para datos
-del servidor, React Hook Form + Zod para formularios, `@supabase/supabase-js`
-para la sesión, Vitest + Testing Library para tests. Detalle en
-`../AGENTS.md`.
+Next.js (App Router) + TypeScript + Tailwind CSS, TanStack Query for server
+data, React Hook Form + Zod for forms, `@supabase/supabase-js` for the
+session, Vitest + Testing Library for tests. Details in `../AGENTS.md`.
 
-## Rutas
+## Routes
 
-Todas requieren sesión, salvo `/login`.
+All of them require a session, except `/login`.
 
-| Ruta                     | Pantalla                                                 | Roles                          | HU           |
-| ------------------------ | -------------------------------------------------------- | ------------------------------ | ------------ |
-| `/login`                 | Inicio de sesión                                         | Todos                          | HU-15        |
-| `/`                      | Inicio: resumen de pedidos pendientes y stock bajo       | Todos                          | —            |
-| `/productos`             | Lista, búsqueda y filtro de productos                    | Administrador, empleado        | HU-08        |
-| `/productos/nuevo`       | Registrar producto                                       | Administrador                  | HU-08        |
-| `/productos/[id]`        | Editar, cambiar imagen o deshabilitar                    | Administrador (precio solo él) | HU-08        |
-| `/inventario`            | Existencias y registro de entradas, salidas y ajustes    | Administrador, empleado        | HU-09        |
-| `/pedidos`               | Lista de pedidos con filtros por estado, fecha y cliente | Administrador, empleado        | HU-10, HU-12 |
-| `/pedidos/[id]`          | Detalle del pedido y cambio de estado                    | Administrador, empleado        | HU-10        |
-| `/clientes`              | Lista de clientes                                        | Administrador, empleado        | HU-11        |
-| `/clientes/[id]`         | Datos de contacto e historial de pedidos                 | Administrador, empleado        | HU-11, HU-12 |
-| `/contenido/negocio`     | Información del negocio que muestra la landing           | Administrador                  | HU-01        |
-| `/contenido/promociones` | Promociones                                              | Administrador, autorizado      | HU-13        |
-| `/contenido/eventos`     | Eventos                                                  | Administrador, autorizado      | HU-13        |
-| `/contenido/multimedia`  | Imágenes y videos                                        | Administrador, autorizado      | HU-13        |
-| `/visitas-doctor`        | Visitas del doctor                                       | Administrador, autorizado      | HU-14        |
-| `/usuarios`              | Usuarios internos y roles                                | Solo administrador             | HU-15        |
+| Route                    | Screen                                                    | Roles                           | HU              |
+| ------------------------ | --------------------------------------------------------- | ------------------------------- | --------------- |
+| `/login`                 | Sign in                                                   | All                             | HU-34           |
+| `/`                      | Home: pending orders and low-stock summary                | All                             | —               |
+| `/productos`             | Product list, search and filter                           | Administrator, employee         | HU-08           |
+| `/productos/nuevo`       | Register a product                                        | Administrator                   | HU-08           |
+| `/productos/[id]`        | Edit, change image or disable                             | Administrator (price only them) | HU-08, HU-28    |
+| `/productos/categorias`  | Product categories                                        | Administrator                   | HU-27           |
+| `/inventario`            | Stock and entries, exits and adjustments                  | Administrator, employee         | HU-09           |
+| `/pedidos`               | Order list with status, date and customer filters         | Administrator, employee         | HU-10, HU-12    |
+| `/pedidos/[id]`          | Order details, status, payment, discount and cancellation | Administrator, employee         | HU-10, HU-29–31 |
+| `/clientes`              | Customer list                                             | Administrator, employee         | HU-11           |
+| `/clientes/[id]`         | Contact data and order history                            | Administrator, employee         | HU-11, HU-12    |
+| `/contenido/negocio`     | Business information shown on the landing page            | Administrator                   | HU-32           |
+| `/contenido/promociones` | Promotions                                                | Administrator, authorized       | HU-13           |
+| `/contenido/eventos`     | Events                                                    | Administrator, authorized       | HU-13           |
+| `/contenido/multimedia`  | Images and videos                                         | Administrator, authorized       | HU-33           |
+| `/visitas-doctor`        | Doctor visits                                             | Administrator, authorized       | HU-14           |
+| `/usuarios`              | Internal users and roles                                  | Administrator only              | HU-15           |
 
-## Estructura de carpetas
+Routes are in Spanish because they are visible to users in the address bar.
 
-Organización por módulo (SRS 2.2.2): cada dominio agrupa sus componentes,
-hooks de datos, esquemas y tests.
+## Folder structure
+
+Organized by module (SRS 2.2.2): each domain groups its components, data
+hooks, schemas and tests.
 
 ```
 src/
-  app/                    # rutas (App Router): solo arman la página
+  app/                    # routes (App Router): they only assemble the page
     (auth)/login/
-    (panel)/              # layout con menú lateral y guard de sesión
+    (panel)/              # layout with side menu and session guard
       productos/  inventario/  pedidos/  clientes/
       contenido/  visitas-doctor/  usuarios/
   features/
-    productos/            # componentes, useProductos(), esquema Zod, tests
+    productos/            # components, useProductos(), Zod schema, tests
     inventario/
     pedidos/
     clientes/
     contenido/
     visitas-doctor/
     usuarios/
-    auth/                 # sesión, rol actual, <RequiereRol>
+    auth/                 # session, current role, <RequiereRol>
   shared/
-    components/           # botones, tablas, formularios, mensajes
-    lib/                  # cliente de la API, cliente de Supabase
+    components/           # buttons, tables, forms, messages
+    lib/                  # API client, Supabase client
 ```
 
-## Datos y estado
+## Data and state
 
-- **Datos del servidor:** TanStack Query. Un hook por operación
-  (`useProductos`, `useActualizarEstadoPedido`, …) que llama al cliente de la
-  API en `shared/lib`. Después de cada cambio se invalida la consulta
-  correspondiente.
-- **Formularios:** React Hook Form + Zod. Los esquemas reflejan las reglas
-  del backend (campos obligatorios, fechas de fin posteriores al inicio) para
-  avisar antes de enviar.
-- **Sesión:** Supabase Auth en el navegador. El JWT se manda en cada llamada
-  a la API (`Authorization: Bearer`). El rol del usuario lo devuelve la API.
+- **Server data:** TanStack Query. One hook per operation (`useProductos`,
+  `useActualizarEstadoPedido`, …) that calls the API client in `shared/lib`.
+  The matching query is invalidated after every change.
+- **Forms:** React Hook Form + Zod. Schemas mirror the backend rules
+  (required fields, end dates after start dates) to warn before submitting.
+- **Session:** Supabase Auth in the browser. The JWT is sent on every API call
+  (`Authorization: Bearer`). The API returns the user's role.
 
-## Permisos en la interfaz
+## Permissions in the UI
 
-- El layout del panel redirige a `/login` si no hay sesión.
-- El menú y los botones se muestran según el rol (por ejemplo, el empleado
-  no ve el campo de precio editable ni `/usuarios`).
-- Si la API responde 403, se muestra "No tenés permiso para esta acción" y no
-  se cambia nada en pantalla.
+- The panel layout redirects to `/login` when there is no session.
+- Menu items and buttons depend on the role (for example, employees do not
+  see an editable price field or `/usuarios`).
+- If the API returns 403, the panel shows "No tenés permiso para esta
+  acción" and nothing changes on screen.
 
-## Manejo de errores
+## Error handling
 
-- 400: se marcan los campos con el mensaje que devuelve la API.
-- 401: sesión vencida → redirigir a `/login`.
-- 409: mensaje del conflicto (código duplicado, stock insuficiente).
-- Error de red o 503: aviso de que no se pudo conectar y botón para
-  reintentar; lo que el usuario escribió no se pierde.
+- 400: mark the fields with the message returned by the API.
+- 401: expired session → redirect to `/login`.
+- 409: show the conflict message (duplicate code, not enough stock).
+- Network error or 503: "could not connect" notice with a retry button; what
+  the user typed is not lost.
 
-## Variables de entorno
+## Environment variables
 
-| Variable                        | Para qué                       |
-| ------------------------------- | ------------------------------ |
-| `NEXT_PUBLIC_API_URL`           | URL de la API.                 |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Proyecto de Supabase (sesión). |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clave pública de Supabase.     |
+| Variable                        | Purpose                     |
+| ------------------------------- | --------------------------- |
+| `NEXT_PUBLIC_API_URL`           | API URL.                    |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project (session). |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public key.        |

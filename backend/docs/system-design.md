@@ -1,126 +1,98 @@
-# System design — API (backend)
+HU-15, HU-34 |||||||| Module | Responsibility | HU |
+| ------------ | -------------------------------------------------------------------- | ------------------- |
+| `negocio` | Business information (contact, location, social media, WhatsApp). | HU-01 |
+| `productos` | Products, categories, images, featured products, search and filters. | HU-02…HU-04, HU-08 |
+| `inventario` | Stock and movements (entries, exits, adjustments) with audit trail. | HU-09 |
+| `pedidos` | Placing orders, order lines, statuses and status history. | HU-06, HU-10, HU-12 |
+| `clientes` | Customer account and contact data; viewed from the admin panel. | HU-06, HU-11 |
+| `contenido` | Promotions, events and media with a publication period. | HU-13 |
+| `visitas` | Doctor visits. | HU-14 |
+| `usuarios` | Internal users, roles and permissions. | HU-15 |
+| `auth` | Guard that validates the Supabase JWT, and a roles decorator. | Cross-cutting |
+| `health` | `GET /health` (already exists). | Cross-cutting |
 
-Fuente: SRS de Nativa 360, capítulo IV (diseño) y sección 2.2.3
-(estándares de base de datos). El stack y el estado actual del scaffold están
-en [`../AGENTS.md`](../AGENTS.md).
+## Data model
 
-> Este documento es la **propuesta de diseño** para la primera versión. El
-> modelo de datos y los endpoints se ajustan cuando se implemente cada HU; si
-> algo cambia, se actualiza acá en el mismo PR.
+SRS conventions (2.2.3): plural table names, `snake_case` columns, primary
+key `<entity>_id`, foreign keys named after the related entity,
+normalization up to 3NF, and audit fields (`fecha_creacion`,
+`fecha_modificacion`, `creado_por`, `modificado_por`) on tables that record
+changes. In Prisma, models can be named in singular and mapped to the plural
+table.
 
-## Lugar en la solución
+| Table                    | Main fields                                                                                                                                                     |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `negocio`                | nombre, descripcion, telefono, whatsapp, direccion, correo, instagram_url, facebook_url                                                                         |
+| `categorias`             | categoria_id, nombre, estado                                                                                                                                    |
+| `productos`              | producto_id, codigo (unique), nombre, descripcion, precio, imagen_url, categoria_id, destacado, estado (activo/inactivo)                                        |
+| `inventarios`            | producto_id, cantidad_disponible, fecha_modificacion                                                                                                            |
+| `movimientos_inventario` | movimiento_id, producto_id, tipo (entrada/salida/ajuste), cantidad, motivo, usuario_id, fecha_creacion                                                          |
+| `clientes`               | cliente_id, auth_id (Supabase), nombre, correo (unique), telefono, direccion                                                                                    |
+| `pedidos`                | pedido_id, codigo, cliente_id, total_estimado, descuento, tipo_entrega, zona_envio_id, direccion_entrega, contacto_entrega, costo_envio, estado, fecha_creacion |
+| `detalle_pedido`         | pedido_id, producto_id, cantidad, precio_unitario, subtotal                                                                                                     |
+| `estados_pedido`         | estado_pedido_id, pedido_id, estado, observaciones, usuario_id, fecha_creacion                                                                                  |
+| `usuarios`               | usuario_id, auth_id (Supabase), nombre, correo (unique), rol_id, estado (activo/deshabilitado)                                                                  |
+| `roles`                  | rol_id, nombre (administrador, empleado, propietario), estado                                                                                                   |
+| `permisos`               | permiso_id, rol_id, recurso, accion                                                                                                                             |
+| `promociones`            | promocion_id, titulo, descripcion, producto_id or categoria_id, descuento, fecha_inicio, fecha_fin, estado                                                      |
+| `eventos`                | evento_id, nombre, descripcion, fecha_inicio, fecha_fin, ubicacion, estado                                                                                      |
+| `contenidos`             | contenido_id, titulo, descripcion, imagen_url, video_url, enlace, fecha_inicio, fecha_fin, estado                                                               |
+| `visitas_doctor`         | visita_id, nombre_doctor, especialidad, descripcion, fecha, hora_inicio, hora_fin, estado, observaciones                                                        |
+| `pagos_pedido`           | pago_id, pedido_id, monto, referencia, usuario_id, fecha_creacion                                                                                               |
+| `descuentos_pedido`      | descuento_id, pedido_id, monto, motivo, usuario_id, fecha_creacion                                                                                              |
+| `zonas_envio`            | zona_envio_id, nombre, estado                                                                                                                                   |
 
-```
- landing (Next.js) ─┐
- e-com   (Next.js) ─┼──► API (NestJS) ──► Postgres (Supabase)
- admin   (Next.js) ─┘        │
-                             ├──► Supabase Auth (JWT de clientes y personal)
-                             └──► Supabase Storage (imágenes de productos y contenido)
-```
+Key relationships:
 
-- Arquitectura en capas (SRS 4.2): **presentación** en los frontends,
-  **lógica de negocio** en los servicios de NestJS y **acceso a datos** con
-  Prisma.
-- Los frontends **no** hablan directo con la base de datos. Supabase en el
-  frontend se usa solo para autenticación (iniciar y cerrar sesión).
-- WhatsApp no se integra: es un enlace `wa.me` que arma el frontend.
+- A customer has many orders; an order has many products through
+  `detalle_pedido` (SRS 2.2.3).
+- `detalle_pedido.precio_unitario` stores the price **at the time of the
+  order**: if the product price changes later, the history does not.
+- Each order status change is a row in `estados_pedido` (who, when and why);
+  `pedidos.estado` holds the current status.
+- Products and content are never deleted: they are disabled (`estado`) to
+  keep the history.
 
-## Stack
-
-NestJS + TypeScript estricto, Prisma Next con la extensión de Supabase,
-`@supabase/supabase-js` para Auth y Storage, Zod (`nestjs-zod`) para validar
-DTOs, Swagger en `/docs`, cache con `@nestjs/cache-manager` (Redis o
-memoria), Jest para tests unitarios y e2e. Detalle en `../AGENTS.md`.
-
-## Módulos
-
-Un módulo de NestJS por dominio, en `src/<modulo>/` con su `controller`,
-`service`, DTOs y tests. Los nombres siguen el SRS (2.2.2): métodos que
-dicen lo que hacen, por ejemplo `crearProducto()` o `actualizarInventario()`.
-
-| Módulo       | Responsabilidad                                                         | HU                  |
-| ------------ | ----------------------------------------------------------------------- | ------------------- |
-| `negocio`    | Información del negocio (contacto, ubicación, redes, WhatsApp).         | HU-01               |
-| `productos`  | Productos, categorías, imágenes, destacados, búsqueda y filtros.        | HU-02…HU-04, HU-08  |
-| `inventario` | Existencias y movimientos (entradas, salidas, ajustes) con auditoría.   | HU-09               |
-| `pedidos`    | Registro de pedidos, detalle, estados e historial de cambios.           | HU-06, HU-10, HU-12 |
-| `clientes`   | Cuenta y datos de contacto del cliente; consulta desde el admin.        | HU-06, HU-11        |
-| `contenido`  | Promociones, eventos y contenido multimedia con período de publicación. | HU-13               |
-| `visitas`    | Visitas del doctor.                                                     | HU-14               |
-| `usuarios`   | Usuarios internos, roles y permisos.                                    | HU-15               |
-| `auth`       | Guard que valida el JWT de Supabase y decorador de roles.               | Transversal         |
-| `health`     | `GET /health` (ya existe).                                              | Transversal         |
-
-## Modelo de datos
-
-Convenciones del SRS (2.2.3): tablas en plural, columnas en `snake_case`,
-clave primaria `<entidad>_id`, claves foráneas con el nombre de la entidad
-relacionada, normalización hasta 3FN y campos de auditoría
-(`fecha_creacion`, `fecha_modificacion`, `creado_por`, `modificado_por`) en
-las tablas que registran cambios. En Prisma los modelos pueden nombrarse en
-singular y mapearse a la tabla en plural.
-
-| Tabla                    | Campos principales                                                                                                      |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `negocio`                | nombre, descripcion, telefono, whatsapp, direccion, correo, instagram_url, facebook_url                                 |
-| `categorias`             | categoria_id, nombre, estado                                                                                            |
-| `productos`              | producto_id, codigo (único), nombre, descripcion, precio, imagen_url, categoria_id, destacado, estado (activo/inactivo) |
-| `inventarios`            | producto_id, cantidad_disponible, fecha_modificacion                                                                    |
-| `movimientos_inventario` | movimiento_id, producto_id, tipo (entrada/salida/ajuste), cantidad, motivo, usuario_id, fecha_creacion                  |
-| `clientes`               | cliente_id, auth_id (Supabase), nombre, correo (único), telefono, direccion                                             |
-| `pedidos`                | pedido_id, codigo, cliente_id, total_estimado, estado, fecha_creacion                                                   |
-| `detalle_pedido`         | pedido_id, producto_id, cantidad, precio_unitario, subtotal                                                             |
-| `estados_pedido`         | estado_pedido_id, pedido_id, estado, observaciones, usuario_id, fecha_creacion                                          |
-| `usuarios`               | usuario_id, auth_id (Supabase), nombre, correo (único), rol_id, estado (activo/deshabilitado)                           |
-| `roles`                  | rol_id, nombre (administrador, empleado, propietario), estado                                                           |
-| `permisos`               | permiso_id, rol_id, recurso, accion                                                                                     |
-| `promociones`            | promocion_id, titulo, descripcion, producto_id o categoria_id, descuento, fecha_inicio, fecha_fin, estado               |
-| `eventos`                | evento_id, nombre, descripcion, fecha_inicio, fecha_fin, ubicacion, estado                                              |
-| `contenidos`             | contenido_id, titulo, descripcion, imagen_url, video_url, enlace, fecha_inicio, fecha_fin, estado                       |
-| `visitas_doctor`         | visita_id, nombre_doctor, especialidad, descripcion, fecha, hora_inicio, hora_fin, estado, observaciones                |
-
-Relaciones clave:
-
-- Un cliente tiene muchos pedidos; un pedido tiene muchos productos a través
-  de `detalle_pedido` (SRS 2.2.3).
-- `detalle_pedido.precio_unitario` guarda el precio **al momento del
-  pedido**: si después cambia el precio del producto, el historial no cambia.
-- Cada cambio de estado de un pedido es una fila en `estados_pedido` (quién,
-  cuándo y por qué); `pedidos.estado` guarda el estado actual.
-- Los productos y el contenido no se borran: se deshabilitan (`estado`) para
-  conservar el historial.
-
-Estados de pedido: `pendiente` → `en_revision` → `confirmado` → `preparado`
-→ `entregado`, y `cancelado` desde cualquier estado antes de `entregado`.
+Order statuses: `pendiente` (pending) → `en_revision` (in review) →
+`confirmado` (confirmed) → `preparado` (prepared) → `entregado` (delivered),
+and `cancelado` (cancelled) from any status before `entregado`.
 
 ## API
 
-REST con JSON, documentada en Swagger (`/docs`). Rutas públicas para lo que
-ven los clientes y rutas bajo `/admin` para el panel.
+REST with JSON, documented in Swagger (`/docs`). Public routes for what
+customers see and routes under `/admin` for the panel.
 
-| Método y ruta                                                              | Acceso                              | HU           |
-| -------------------------------------------------------------------------- | ----------------------------------- | ------------ |
-| `GET /negocio`                                                             | Público                             | HU-01        |
-| `PUT /admin/negocio`                                                       | Administrador                       | HU-01        |
-| `GET /productos?buscar=&categoria=&page=`                                  | Público (solo activos)              | HU-02, HU-03 |
-| `GET /productos/destacados`                                                | Público                             | HU-01        |
-| `GET /productos/:id`                                                       | Público                             | HU-04        |
-| `GET /categorias`                                                          | Público                             | HU-03        |
-| `POST /pedidos`                                                            | Cliente autenticado                 | HU-06        |
-| `GET /pedidos/mios`                                                        | Cliente autenticado                 | HU-06        |
-| `GET/POST/PATCH /admin/productos`                                          | Personal según permiso              | HU-08        |
-| `GET/POST /admin/inventario`                                               | Administrador, empleado             | HU-09        |
-| `GET /admin/pedidos`, `PATCH /admin/pedidos/:id/estado`                    | Administrador, empleado             | HU-10, HU-12 |
-| `GET /admin/clientes`, `GET /admin/clientes/:id`                           | Administrador, empleado             | HU-11        |
-| `GET /promociones`, `GET /eventos`, `GET /contenidos`                      | Público (solo vigentes)             | HU-13        |
-| `GET/POST/PATCH /admin/promociones`, `/admin/eventos`, `/admin/contenidos` | Administrador o personal autorizado | HU-13        |
-| `GET /visitas-doctor`                                                      | Público (solo confirmadas)          | HU-14        |
-| `GET/POST/PATCH /admin/visitas-doctor`                                     | Administrador o personal autorizado | HU-14        |
-| `GET/POST/PATCH /admin/usuarios`                                           | Solo administrador                  | HU-15        |
-| `GET /admin/yo`                                                            | Cualquier usuario interno           | HU-15        |
+| Method and route                                                           | Access                                  | HU           |
+| -------------------------------------------------------------------------- | --------------------------------------- | ------------ |
+| `GET /negocio`                                                             | Public                                  | HU-01        |
+| `PUT /admin/negocio`                                                       | Administrator                           | HU-32        |
+| `GET /productos?buscar=&categoria=&page=`                                  | Public (active only)                    | HU-02, HU-03 |
+| `GET /productos/destacados`                                                | Public                                  | HU-16        |
+| `GET /productos/:id`                                                       | Public                                  | HU-04        |
+| `GET /categorias`                                                          | Public                                  | HU-03        |
+| `POST /pedidos`                                                            | Authenticated customer                  | HU-06        |
+| `GET /pedidos/mios`                                                        | Authenticated customer                  | HU-06        |
+| `GET/POST/PATCH /admin/productos`                                          | Staff, by permission                    | HU-08        |
+| `GET /admin/inventario`, `POST /admin/inventario/movimientos`              | Administrator, employee                 | HU-09        |
+| `GET /admin/pedidos`, `PATCH /admin/pedidos/:id/estado`                    | Administrator, employee                 | HU-10, HU-12 |
+| `GET /admin/clientes`, `GET /admin/clientes/:id`                           | Administrator, employee                 | HU-11        |
+| `GET /promociones`, `GET /eventos`, `GET /contenidos`                      | Public (active only)                    | HU-21        |
+| `GET/POST/PATCH /admin/promociones`, `/admin/eventos`, `/admin/contenidos` | Administrator or authorized staff       | HU-13        |
+| `GET /visitas-doctor`                                                      | Public (confirmed only)                 | HU-20        |
+| `GET/POST/PATCH /admin/visitas-doctor`                                     | Administrator or authorized staff       | HU-14        |
+| `GET/POST/PATCH /admin/usuarios`                                           | Administrator only                      | HU-15        |
+| `GET /admin/yo`                                                            | Any internal user                       | HU-34        |
+| `GET /zonas-envio`                                                         | Public                                  | HU-23        |
+| `GET /pedidos/:codigo`                                                     | Authenticated customer (own only)       | HU-26        |
+| `POST /clientes/registro`, `GET /clientes/yo`                              | Authenticated customer                  | HU-24, HU-25 |
+| `GET/POST/PATCH /admin/categorias`                                         | Administrator                           | HU-27        |
+| `POST /admin/productos/:id/imagen`                                         | Administrator or authorized staff       | HU-28        |
+| `POST /admin/pedidos/:id/pago`                                             | Administrator, employee with permission | HU-29        |
+| `POST /admin/pedidos/:id/cancelar`                                         | Administrator or authorized employee    | HU-30        |
+| `POST /admin/pedidos/:id/descuento`                                        | Administrator only                      | HU-31        |
 
-Respuestas de error con un formato único, para que los frontends muestren
-mensajes claros (RNF-05):
+Error responses share a single format, so the frontends can show clear
+messages (RNF-05):
 
 ```json
 {
@@ -131,42 +103,44 @@ mensajes claros (RNF-05):
 }
 ```
 
-| Código | Cuándo                                                            |
-| ------ | ----------------------------------------------------------------- |
-| 400    | Datos inválidos (Zod) o regla de negocio incumplida.              |
-| 401    | Sin sesión o token inválido.                                      |
-| 403    | Con sesión, pero el rol no tiene permiso.                         |
-| 404    | El recurso no existe o no es visible para ese usuario.            |
-| 409    | Conflicto: código o correo duplicado, stock insuficiente (RN-05). |
-| 503    | Base de datos o servicio externo no disponible.                   |
+| Code | When                                                         |
+| ---- | ------------------------------------------------------------ |
+| 400  | Invalid data (Zod) or a business rule is broken.             |
+| 401  | No session or invalid token.                                 |
+| 403  | Signed in, but the role is not allowed.                      |
+| 404  | The resource does not exist or is not visible to this user.  |
+| 409  | Conflict: duplicate code or email, not enough stock (RN-05). |
+| 503  | Database or external service unavailable.                    |
 
-## Seguridad (SRS 4.8)
+Messages in `message` are in Spanish, because the frontends show them to
+users as they are.
 
-- **Autenticación:** Supabase Auth emite el JWT; el guard de `auth` lo valida
-  contra el JWKS (`SUPABASE_JWKS_URL`) y carga el usuario o cliente.
-- **Autorización:** decorador de roles por endpoint. Las reglas RN-23, RN-27
-  y RN-28 se validan en el servicio, no solo en el frontend.
-- **Validación:** todo body, query y parámetro pasa por un esquema Zod.
-- **Trazabilidad:** las operaciones administrativas guardan `usuario_id` y
-  fecha (inventario, estados de pedido, precios).
-- **Secretos:** solo en variables de entorno (`.env`, Render). Nunca en el
-  código.
-- **CORS:** solo los orígenes de `ALLOWED_ORIGINS`.
+## Security (SRS 4.8)
 
-## Rendimiento y disponibilidad
+- **Authentication:** Supabase Auth issues the JWT; the `auth` guard
+  validates it against the JWKS (`SUPABASE_JWKS_URL`) and loads the user or
+  customer.
+- **Authorization:** roles decorator per endpoint. Rules RN-23, RN-27 and
+  RN-28 are enforced in the service, not only in the frontend.
+- **Validation:** every body, query and parameter goes through a Zod schema.
+- **Audit trail:** administrative operations store `usuario_id` and date
+  (inventory, order statuses, prices).
+- **Secrets:** only in environment variables (`.env`, Render). Never in code.
+- **CORS:** only the origins in `ALLOWED_ORIGINS`.
 
-- Listados paginados; índices en `productos(nombre)`, `productos(categoria_id)`
-  y `pedidos(cliente_id, estado)`.
-- Cache corto para lecturas públicas (negocio, destacados, categorías); se
-  invalida cuando el admin las modifica.
-- Imágenes en Supabase Storage, servidas ya optimizadas por los frontends.
-- `GET /health` comprueba la conexión a la base cuando esté conectada.
+## Performance and availability
 
-## Decisiones pendientes
+- Paginated lists; indexes on `productos(nombre)`, `productos(categoria_id)`
+  and `pedidos(cliente_id, estado)`.
+- Short cache for public reads (business, featured, categories); invalidated
+  when the admin panel changes them.
+- Images in Supabase Storage, served optimized by the frontends.
+- `GET /health` checks the database connection once it is connected.
 
-- Momento en que un pedido descuenta inventario (al **confirmar** o al
-  **entregar**).
-- Entregas a domicilio (RN-29 a RN-32): agregarían tipo de entrega, dirección
-  y costo de envío a `pedidos`.
-- Si los permisos se manejan por rol fijo (más simple) o con la tabla
-  `permisos` configurable (más flexible).
+## Pending decisions
+
+- When an order deducts stock (on **confirmed** or on **delivered**).
+- Home delivery (RN-29 to RN-32): would add delivery type, address and
+  shipping cost to `pedidos`.
+- Whether permissions are fixed per role (simpler) or configurable through
+  the `permisos` table (more flexible).

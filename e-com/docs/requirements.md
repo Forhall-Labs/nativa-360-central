@@ -1,81 +1,85 @@
-# Requisitos — Comercio electrónico
+# Requirements — Online store
 
-Fuente: SRS de Nativa 360, secciones 3.8.4.2 (requisitos funcionales),
-3.8.5 (reglas de negocio) y 3.8.7 (requisitos no funcionales).
+Source: Nativa 360 SRS, sections 3.8.4.2 (functional requirements), 3.8.5
+(business rules) and 3.8.7 (non-functional requirements).
 
-## Propósito
+## Purpose
 
-El comercio electrónico permite al cliente consultar el catálogo, buscar y
-filtrar productos, armar un carrito y registrar un pedido. El pago y la
-coordinación final se hacen **manualmente por WhatsApp** con el personal de
-Nativa 360: no hay pagos en línea.
+The online store lets customers browse the catalog, search and filter
+products, build a cart and place an order. Payment and final coordination
+happen **manually over WhatsApp** with Nativa 360's staff: there are no
+online payments.
 
-## Usuarios
+## Users
 
-| Rol       | Qué hace en el e-commerce                                                |
-| --------- | ------------------------------------------------------------------------ |
-| Visitante | Consulta el catálogo, busca, filtra y ve el detalle de los productos.    |
-| Cliente   | Con cuenta registrada: arma el carrito, registra pedidos y ve los suyos. |
+| Role     | What they do in the online store                                      |
+| -------- | --------------------------------------------------------------------- |
+| Visitor  | Browses the catalog, searches, filters and views product details.     |
+| Customer | With a registered account: builds a cart, places orders, sees theirs. |
 
-## Requisitos funcionales
+## Functional requirements
 
-| Código | Requisito                             | Descripción                                                                       | HU    |
-| ------ | ------------------------------------- | --------------------------------------------------------------------------------- | ----- |
-| MO-06  | Mostrar productos disponibles         | Muestra los productos con nombre, imagen, descripción, precio y disponibilidad.   | HU-02 |
-| MO-07  | Buscar productos                      | Búsqueda por palabras del nombre, la descripción o las características.           | HU-03 |
-| MO-08  | Filtrar productos                     | Filtro por categorías u otros criterios definidos.                                | HU-03 |
-| MO-09  | Consultar el detalle de un producto   | Muestra nombre, descripción, imagen, precio, categoría y disponibilidad.          | HU-04 |
-| MO-10  | Agregar productos al carrito          | Agrega al carrito productos disponibles.                                          | HU-05 |
-| MO-11  | Modificar cantidades en el carrito    | Aumenta o disminuye las unidades de un producto en el carrito.                    | HU-05 |
-| MO-12  | Eliminar productos del carrito        | Retira productos del carrito.                                                     | HU-05 |
-| MO-13  | Calcular el total estimado            | Calcula y muestra el total estimado según precios y cantidades.                   | HU-05 |
-| MO-14  | Registrar un pedido                   | Registra el pedido con productos, cantidades, datos del cliente y total estimado. | HU-06 |
-| MO-15  | Coordinar el pedido mediante WhatsApp | Ofrece acceso al WhatsApp del negocio para coordinar manualmente pedido y pago.   | HU-07 |
+| Code  | Requirement                       | Description                                                                    | HU    |
+| ----- | --------------------------------- | ------------------------------------------------------------------------------ | ----- |
+| MO-06 | Show available products           | Shows products with name, image, description, price and availability.          | HU-02 |
+| MO-07 | Search products                   | Search by words in the name, description or features.                          | HU-03 |
+| MO-08 | Filter products                   | Filter by category or other defined criteria.                                  | HU-03 |
+| MO-09 | View product details              | Shows name, description, image, price, category and availability.              | HU-04 |
+| MO-10 | Add products to the cart          | Adds available products to the cart.                                           | HU-05 |
+| MO-11 | Change quantities in the cart     | Increases or decreases the units of a product in the cart.                     | HU-05 |
+| MO-12 | Remove products from the cart     | Removes products from the cart.                                                | HU-05 |
+| MO-13 | Calculate the estimated total     | Calculates and shows the estimated total from prices and quantities.           | HU-05 |
+| MO-14 | Place an order                    | Registers the order with products, quantities, customer data and total.        | HU-06 |
+| MO-15 | Coordinate the order via WhatsApp | Gives access to the store's WhatsApp to coordinate order and payment manually. | HU-07 |
 
-## Reglas de negocio que aplican
+Derived stories cover the promotion, delivery and account rules: HU-22
+(promotions, RN-19 to RN-21), HU-23 (pickup or home delivery, RN-29 to
+RN-32), HU-24 and HU-25 (customer account, RN-24, RNF-01) and HU-26 (my
+orders, RN-26).
 
-| Código | Regla                                                                                 |
-| ------ | ------------------------------------------------------------------------------------- |
-| RN-02  | Solo se muestran en el catálogo los productos activos.                                |
-| RN-05  | No se puede registrar un pedido con una cantidad mayor al inventario disponible.      |
-| RN-09  | Al registrar un pedido se guardan los productos, sus cantidades y el total estimado.  |
-| RN-10  | La disponibilidad final la verifica manualmente el personal.                          |
-| RN-11  | La confirmación del pedido y del pago se hace manualmente por WhatsApp.               |
-| RN-12  | El sistema no reserva productos mientras el pedido está pendiente de confirmación.    |
-| RN-19  | Una promoción solo se aplica durante su período de vigencia.                          |
-| RN-20  | Las promociones se aplican solo a los productos o categorías definidos para ellas.    |
-| RN-21  | No se acumulan dos promociones sobre un mismo producto.                               |
-| RN-24  | El cliente necesita una cuenta registrada para realizar pedidos.                      |
-| RN-26  | Cada cliente solo puede consultar sus propios pedidos.                                |
-| RN-30  | Un pedido con entrega a domicilio requiere dirección y contacto de entrega completos. |
-| RN-31  | El costo de envío queda acordado antes de que el cliente confirme el pedido.          |
-| RN-32  | Los pedidos para retiro en el local no tienen costo de envío.                         |
+## Business rules
 
-## Requisitos no funcionales
+| Code  | Rule                                                                            |
+| ----- | ------------------------------------------------------------------------------- |
+| RN-02 | Only active products are shown in the catalog.                                  |
+| RN-05 | An order cannot be placed for more units than are in stock.                     |
+| RN-09 | Placing an order stores the products, their quantities and the estimated total. |
+| RN-10 | Final availability is checked manually by the staff.                            |
+| RN-11 | Order and payment confirmation happen manually over WhatsApp.                   |
+| RN-12 | The system does not reserve stock while an order is pending confirmation.       |
+| RN-19 | A promotion only applies during its validity period.                            |
+| RN-20 | Promotions only apply to the products or categories defined for them.           |
+| RN-21 | Two promotions cannot stack on the same product.                                |
+| RN-24 | Customers need a registered account to place orders.                            |
+| RN-26 | Each customer can only see their own orders.                                    |
+| RN-30 | A home delivery order requires a complete delivery address and contact.         |
+| RN-31 | The shipping cost is agreed before the customer confirms the order.             |
+| RN-32 | In-store pickup orders have no shipping cost.                                   |
 
-| Código | Tipo           | Cómo aplica al e-commerce                                                                 |
-| ------ | -------------- | ----------------------------------------------------------------------------------------- |
-| RNF-01 | Seguridad      | Las credenciales del cliente se protegen; cada cliente solo accede a sus datos y pedidos. |
-| RNF-02 | Rendimiento    | Catálogo, búsqueda y filtros responden en un tiempo adecuado; imágenes optimizadas.       |
-| RNF-03 | Disponibilidad | Si la API no responde, se muestra un mensaje claro en vez de una pantalla rota.           |
-| RNF-05 | Usabilidad     | El catálogo se usa sin conocimientos técnicos; los errores dicen cómo corregirse.         |
-| RNF-06 | Accesibilidad  | Responsivo en computadora, tableta y celular.                                             |
-| RNF-09 | Compatibilidad | Funciona en navegadores modernos.                                                         |
-| RNF-10 | Integración    | WhatsApp es un enlace: sin mensajes automáticos ni confirmación automática de pagos.      |
+## Non-functional requirements
 
-## Fuera de alcance
+| Code   | Type          | How it applies to the online store                                                   |
+| ------ | ------------- | ------------------------------------------------------------------------------------ |
+| RNF-01 | Security      | Customer credentials are protected; each customer only accesses their own data.      |
+| RNF-02 | Performance   | Catalog, search and filters respond in a reasonable time; optimized images.          |
+| RNF-03 | Availability  | If the API is down, a clear message is shown instead of a broken screen.             |
+| RNF-05 | Usability     | The catalog can be used without technical knowledge; errors explain how to fix them. |
+| RNF-06 | Accessibility | Responsive on desktop, tablet and phone.                                             |
+| RNF-09 | Compatibility | Works on modern browsers.                                                            |
+| RNF-10 | Integration   | WhatsApp is a link: no automatic messages or automatic payment confirmation.         |
 
-- Pagos en línea o confirmación automática de pagos.
-- Mensajes o respuestas automáticas por WhatsApp.
-- Reserva automática de inventario al registrar un pedido (RN-12).
+## Out of scope
 
-## Pendientes de confirmar
+- Online payments or automatic payment confirmation.
+- Automatic WhatsApp messages or replies.
+- Automatic stock reservation when an order is placed (RN-12).
 
-- El alcance (1.7.2) habla de pedidos para **recoger en tienda**, pero las
-  reglas RN-29 a RN-32 hablan de **entrega a domicilio**, zonas de cobertura
-  y costo de envío. Confirmar con el propietario si la primera versión
-  incluye entregas.
-- Qué datos pide el registro de cuenta del cliente (RN-24) y si el pedido
-  puede registrarse como invitado.
-- Cómo se ve el precio cuando hay una promoción vigente (precio tachado,
-  porcentaje, etc.).
+## Open questions
+
+- The scope (SRS 1.7.2) talks about **in-store pickup**, but rules RN-29 to
+  RN-32 talk about **home delivery**, coverage areas and shipping costs.
+  Confirm with the owner whether the first version includes deliveries.
+- Which data the customer sign-up asks for (RN-24) and whether guest
+  checkout is allowed.
+- How a price is shown when a promotion is active (strikethrough price,
+  percentage, etc.).

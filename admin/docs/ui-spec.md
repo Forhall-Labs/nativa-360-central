@@ -1,104 +1,104 @@
-# UI spec — Administración y gestión
+# UI spec — Administration panel
 
-Fuente: SRS de Nativa 360, secciones 2.2.4 (estándares de interfaz), 3.8.2.6
-(restricciones de diseño), 3.8.3.1 (interfaces de usuario) y 3.8.7.4
-(usabilidad y accesibilidad).
+Source: Nativa 360 SRS, sections 2.2.4 (interface standards), 3.8.2.6
+(design constraints), 3.8.3.1 (user interfaces) and 3.8.7.4 (usability and
+accessibility).
 
-## Identidad visual
+## Visual identity
 
-Común a `landing`, `e-com` y `admin`.
+Shared by `landing`, `e-com` and `admin`.
 
-| Elemento   | Lineamiento                                                                                              |
-| ---------- | -------------------------------------------------------------------------------------------------------- |
-| Colores    | **Azul** como color principal, **blanco** de fondo y **verde** solo como acento (poca presencia).        |
-| Tipografía | Una sola familia sans serif; jerarquía con tamaño y peso.                                                |
-| Botones    | Primario (azul relleno), secundario (borde azul) y destructivo (rojo) solo para deshabilitar o cancelar. |
-| Mensajes   | Éxito, error, aviso e información con color e ícono propios, siempre con texto.                          |
-| Espaciado  | Márgenes y espacios uniformes (escala de Tailwind).                                                      |
-| Idioma     | Español (`<html lang="es">`); precios en colones; fechas `dd/mm/aaaa`.                                   |
+| Element    | Guideline                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| Colors     | **Blue** as the main color, **white** background and **green** only as a light accent.           |
+| Typography | One sans-serif family; hierarchy through size and weight.                                        |
+| Buttons    | Primary (filled blue), secondary (blue outline) and destructive (red) only to disable or cancel. |
+| Messages   | Success, error, warning and info each with their own color and icon, always with text.           |
+| Spacing    | Consistent margins and spacing (Tailwind scale).                                                 |
+| Language   | UI text in Spanish (`<html lang="es">`); prices in colones; dates as `dd/mm/aaaa`.               |
 
-Los colores se definen una sola vez como variables en `src/app/globals.css` y
-se usan con las clases de Tailwind.
+Colors are defined once as variables in `src/app/globals.css` and used
+through Tailwind classes.
 
-## Principios del admin
+## Admin panel principles
 
-- **Pensado para el personal de la tienda:** gente sin conocimientos
-  técnicos, muchas veces atendiendo clientes al mismo tiempo. Pocas acciones
-  por pantalla, textos claros, nada de jerga.
-- **Todas las pantallas se parecen:** mismo esquema de lista → detalle →
-  formulario, para no tener que aprender cada módulo.
-- **Las acciones importantes se confirman:** deshabilitar un producto,
-  cancelar un pedido o cambiar un rol piden confirmación.
-- **Cada quien ve lo suyo:** el menú y los botones dependen del rol.
+- **Built for the store staff:** non-technical people, often serving
+  customers at the same time. Few actions per screen, clear texts, no
+  jargon.
+- **Every screen looks alike:** the same list → detail → form pattern, so no
+  module has to be learned from scratch.
+- **Important actions are confirmed:** disabling a product, cancelling an
+  order or changing a role asks for confirmation.
+- **Everyone sees what's theirs:** the menu and buttons depend on the role.
 
-## Estructura general
+## General layout
 
-- **Menú lateral** (en celular, se abre con un botón): Inicio, Pedidos,
+- **Side menu** (on phones it opens with a button): Inicio, Pedidos,
   Productos, Inventario, Clientes, Contenido, Visitas del doctor, Usuarios.
-  Solo aparecen las opciones que el rol puede usar.
-- **Barra superior:** nombre del usuario, su rol y "Cerrar sesión".
-- **Área de trabajo:** título de la pantalla, botón de acción principal
-  arriba a la derecha ("Nuevo producto") y el contenido.
+  Only the options the role can use are shown.
+- **Top bar:** user name, role and "Cerrar sesión".
+- **Work area:** screen title, main action button at the top right ("Nuevo
+  producto") and the content.
 
-## Patrones de pantalla
+## Screen patterns
 
-### Lista
+### List
 
-- Tabla con búsqueda, filtros y paginación. En celular, cada fila se muestra
-  como tarjeta.
-- Estado de cada registro con una etiqueta de color (activo/inactivo,
-  estados del pedido).
-- Lista vacía: mensaje y botón para crear el primero.
+- Table with search, filters and pagination. On phones, each row is shown
+  as a card.
+- Each record's status as a colored label (active/inactive, order
+  statuses).
+- Empty list: message and a button to create the first one.
 
-### Detalle y formulario
+### Detail and form
 
-- Formulario en una columna, con los campos agrupados por tema.
-- Campos obligatorios marcados con `*`; error debajo del campo, en lenguaje
-  claro.
-- Botones al final: "Guardar" (primario) y "Cancelar" (secundario). Mientras
-  se guarda, el botón se desactiva.
-- Al guardar: aviso "Cambios guardados" y vuelta a la lista.
-- Si el usuario sale con cambios sin guardar, se le avisa.
+- Single-column form, with fields grouped by topic.
+- Required fields marked with `*`; the error goes under the field, in plain
+  language.
+- Buttons at the bottom: "Guardar" (primary) and "Cancelar" (secondary).
+  While saving, the button is disabled.
+- After saving: "Cambios guardados" notice and back to the list.
+- If the user leaves with unsaved changes, they are warned.
 
-## Pantallas por módulo
+## Screens by module
 
-| Pantalla           | Detalles                                                                                                                                                         |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Inicio             | Tarjetas con pedidos pendientes y productos con stock bajo; accesos directos.                                                                                    |
-| Pedidos            | Filtros por estado, fecha y cliente. En el detalle: productos, total, datos del cliente, historial de estados y botón "Cambiar estado" con observación opcional. |
-| Productos          | Lista con imagen miniatura, código, nombre, categoría, precio, existencias y estado. Formulario con vista previa de la imagen.                                   |
-| Inventario         | Existencias por producto; botón "Registrar movimiento" (entrada, salida o ajuste, con motivo obligatorio).                                                       |
-| Clientes           | Lista con nombre, teléfono y cantidad de pedidos; detalle con datos de contacto e historial de pedidos.                                                          |
-| Contenido          | Pestañas: Información del negocio, Promociones, Eventos, Multimedia. Cada publicación muestra su vigencia.                                                       |
-| Visitas del doctor | Lista por fecha; formulario con doctor, especialidad, fecha, hora de inicio y fin, descripción y estado.                                                         |
-| Usuarios           | Solo administrador. Lista con nombre, correo, rol y estado; formulario para crear, cambiar rol o deshabilitar.                                                   |
+| Screen        | Details                                                                                                                                            |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home          | Cards with pending orders and low-stock products; shortcuts.                                                                                       |
+| Orders        | Filters by status, date and customer. Details: products, total, customer data, status history and a "Cambiar estado" button with an optional note. |
+| Products      | List with thumbnail, code, name, category, price, stock and status. Form with an image preview.                                                    |
+| Inventory     | Stock per product; "Registrar movimiento" button (entry, exit or adjustment, with a required reason).                                              |
+| Customers     | List with name, phone and number of orders; details with contact data and order history.                                                           |
+| Content       | Tabs: business information, promotions, events, media. Each publication shows its validity.                                                        |
+| Doctor visits | List by date; form with doctor, specialty, date, start and end time, description and status.                                                       |
+| Users         | Administrator only. List with name, email, role and status; form to create, change role or disable.                                                |
 
-Colores de los estados del pedido: pendiente (gris), en revisión (amarillo),
-confirmado (azul), preparado (azul claro), entregado (verde), cancelado
-(rojo). Siempre con el nombre del estado escrito, no solo el color.
+Order status colors: pending (grey), in review (yellow), confirmed (blue),
+prepared (light blue), delivered (green), cancelled (red). Always with the
+status name written, never color alone.
 
-## Responsivo
+## Responsive
 
-Se usa sobre todo en la computadora de la tienda, pero tiene que funcionar en
-tableta y celular para consultas rápidas (ver un pedido, cambiar su estado,
-actualizar una existencia).
+Mostly used on the store's computer, but it must work on tablets and phones
+for quick tasks (check an order, change its status, update stock).
 
-## Estados
+## States
 
-- **Cargando:** esqueletos de tabla o formulario.
-- **Sin permiso:** "No tenés permiso para esta acción"; no se cambia nada.
-- **Sesión vencida:** aviso y redirección a `/login`, volviendo después a la
-  misma pantalla.
-- **Error de conexión:** aviso con "Reintentar"; lo escrito no se pierde.
+- **Loading:** table or form skeletons.
+- **No permission:** "No tenés permiso para esta acción"; nothing changes.
+- **Expired session:** notice and redirect to `/login`, coming back to the
+  same screen afterwards.
+- **Connection error:** notice with "Reintentar"; what was typed is not
+  lost.
 
-## Accesibilidad
+## Accessibility
 
-- Contraste WCAG AA; tamaño de texto cómodo para leer en la tienda.
-- Tablas con encabezados reales; formularios con `label` en cada campo.
-- Todo se puede usar con teclado y el foco se ve.
-- Los diálogos de confirmación atrapan el foco y se cierran con `Esc`.
+- WCAG AA contrast; comfortable text size for reading in the store.
+- Tables with real headers; forms with a `label` on every field.
+- Everything works with the keyboard and the focus is visible.
+- Confirmation dialogs trap focus and close with `Esc`.
 
-## Pendientes de confirmar
+## Open questions
 
-- Códigos exactos de los colores y logo.
-- Umbral de "stock bajo" para el inicio.
+- Exact color codes and logo.
+- Low-stock threshold for the home screen.

@@ -12,8 +12,9 @@ Antes de construir una sección o una HU, leé [`docs/`](docs/):
   de la API y renderizado.
 - [`docs/ui-spec.md`](docs/ui-spec.md): identidad visual y comportamiento de
   cada sección.
-- [`docs/epics/`](docs/epics/): épica e HU-01 con escenarios Gherkin. Cada
-  escenario es un criterio de aceptación y necesita su test.
+- [`docs/epics.md`](docs/epics.md): las épicas de la landing (EP-01 a EP-05).
+- [`docs/user-stories.md`](docs/user-stories.md): HU-01 y HU-16 a HU-21, con escenarios
+  Gherkin. Cada escenario es un criterio de aceptación y necesita su test.
 
 La contraparte de cada HU en la API está en
 [`../backend/docs/`](../backend/docs/). El índice de todo el proyecto está en

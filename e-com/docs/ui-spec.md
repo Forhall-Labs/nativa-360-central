@@ -1,119 +1,118 @@
-# UI spec — Comercio electrónico
+# UI spec — Online store
 
-Fuente: SRS de Nativa 360, secciones 2.2.4 (estándares de interfaz), 3.8.2.6
-(restricciones de diseño), 3.8.3.1 (interfaces de usuario) y 3.8.7.4
-(usabilidad y accesibilidad).
+Source: Nativa 360 SRS, sections 2.2.4 (interface standards), 3.8.2.6
+(design constraints), 3.8.3.1 (user interfaces) and 3.8.7.4 (usability and
+accessibility).
 
-## Identidad visual
+## Visual identity
 
-Común a `landing`, `e-com` y `admin`: el cliente tiene que sentir que es el
-mismo negocio en los tres.
+Shared by `landing`, `e-com` and `admin`: customers must feel it is the same
+store in all three.
 
-| Elemento   | Lineamiento                                                                                       |
-| ---------- | ------------------------------------------------------------------------------------------------- |
-| Colores    | **Azul** como color principal, **blanco** de fondo y **verde** solo como acento (poca presencia). |
-| Tipografía | Una sola familia sans serif; jerarquía con tamaño y peso.                                         |
-| Botones    | Primario (azul relleno) para la acción principal de cada pantalla; secundario (borde azul).       |
-| Mensajes   | Éxito, error, aviso e información con color e ícono propios, siempre con texto.                   |
-| Espaciado  | Márgenes y espacios uniformes (escala de Tailwind).                                               |
-| Idioma     | Español (`<html lang="es">`); precios en colones con separador de miles (₡12 500).                |
+| Element    | Guideline                                                                                      |
+| ---------- | ---------------------------------------------------------------------------------------------- |
+| Colors     | **Blue** as the main color, **white** background and **green** only as a light accent.         |
+| Typography | One sans-serif family; hierarchy through size and weight.                                      |
+| Buttons    | Primary (filled blue) for each screen's main action; secondary (blue outline).                 |
+| Messages   | Success, error, warning and info each with their own color and icon, always with text.         |
+| Spacing    | Consistent margins and spacing (Tailwind scale).                                               |
+| Language   | UI text in Spanish (`<html lang="es">`); prices in colones with thousands separator (₡12 500). |
 
-Los colores se definen una sola vez como variables en `src/app/globals.css` y
-se usan con las clases de Tailwind. Nunca se escribe un color a mano en un
-componente.
+Colors are defined once as variables in `src/app/globals.css` and used
+through Tailwind classes. Never hard-code a color in a component.
 
-## Principios del e-commerce
+## Online store principles
 
-- **Encontrar rápido:** el buscador está siempre visible en el encabezado.
-- **Saber siempre qué hay en el carrito:** ícono con la cantidad de productos
-  en el encabezado de todas las páginas.
-- **Sin sorpresas:** antes de registrar el pedido se muestra un resumen, y se
-  aclara que el pago y la entrega se coordinan por WhatsApp.
-- **Primero el celular.**
+- **Find things fast:** the search box is always visible in the header.
+- **Always know what's in the cart:** a cart icon with the product count in
+  the header of every page.
+- **No surprises:** a summary is shown before placing the order, and it is
+  made clear that payment and delivery are coordinated over WhatsApp.
+- **Mobile first.**
 
-## Pantallas
+## Screens
 
-### Catálogo (`/`)
+### Catalog (`/`)
 
-- Encabezado: logo, buscador, ícono del carrito, "Mi cuenta".
-- Filtro por categoría: chips horizontales en celular, columna lateral en
-  computadora.
-- Tarjeta de producto: imagen, nombre, precio, etiqueta "Agotado" si no hay
-  existencias y botón "Agregar". Si tiene promoción vigente: precio anterior
-  tachado y precio nuevo.
-- Sin resultados: "No encontramos productos para «…»" y un botón para limpiar
-  la búsqueda y los filtros.
+- Header: logo, search box, cart icon, "Mi cuenta".
+- Category filter: horizontal chips on phones, side column on desktop.
+- Product card: image, name, price, "Agotado" label when out of stock and an
+  "Agregar" button. With an active promotion: old price struck through and
+  the new price.
+- No results: "No encontramos productos para «…»" and a button to clear the
+  search and filters.
 
-### Detalle del producto (`/productos/[id]`)
+### Product details (`/productos/[id]`)
 
-- Imagen grande, nombre, categoría, precio, descripción completa y
-  disponibilidad.
-- Selector de cantidad (− / +) y botón "Agregar al carrito". Si no está
-  disponible, el botón se desactiva y dice "No disponible".
-- Al agregar: aviso breve "Agregado al carrito" con enlace "Ver carrito".
+- Large image, name, category, price, full description and availability.
+- Quantity selector (− / +) and "Agregar al carrito" button. If unavailable,
+  the button is disabled and reads "No disponible".
+- After adding: a short "Agregado al carrito" notice with a "Ver carrito"
+  link.
 
-### Carrito (`/carrito`)
+### Cart (`/carrito`)
 
-- Lista de productos: imagen, nombre, precio unitario, selector de cantidad,
-  subtotal y botón para eliminar.
-- Total estimado al final, con la nota "El total final se confirma por
-  WhatsApp".
-- Botón "Continuar con el pedido". Carrito vacío: mensaje y botón "Ver
-  productos".
+- Product list: image, name, unit price, quantity selector, subtotal and a
+  remove button.
+- Estimated total at the bottom, with the note "El total final se confirma
+  por WhatsApp".
+- "Continuar con el pedido" button. Empty cart: message and a "Ver
+  productos" button.
 
 ### Checkout (`/checkout`)
 
-- Si no hay sesión, pide ingresar o crear cuenta y vuelve al checkout.
-- Resumen de productos y total; datos de contacto del cliente (nombre,
-  teléfono) para confirmar.
-- Botón "Registrar pedido". Mientras se envía, el botón se desactiva para no
-  duplicar el pedido.
+- Without a session, asks the customer to sign in or sign up and comes back
+  to checkout.
+- Products and total summary; customer contact data (name, phone) to
+  confirm.
+- "Registrar pedido" button. While sending, the button is disabled so the
+  order is not duplicated.
 
-### Pedido registrado (`/pedidos/[id]`)
+### Placed order (`/pedidos/[id]`)
 
-- Mensaje de éxito con el código del pedido.
-- Botón grande "Coordinar por WhatsApp" (con el mensaje ya armado).
-- Explicación corta de los próximos pasos: el personal confirma
-  disponibilidad, pago y entrega por WhatsApp.
+- Success message with the order code.
+- Large "Coordinar por WhatsApp" button (with the message already written).
+- Short explanation of the next steps: the staff confirms availability,
+  payment and delivery over WhatsApp.
 
-### Mis pedidos (`/mis-pedidos`)
+### My orders (`/mis-pedidos`)
 
-- Lista con código, fecha, total estimado y estado (pendiente, en revisión,
-  confirmado, preparado, entregado, cancelado), cada estado con su color.
+- List with code, date, estimated total and status (pending, in review,
+  confirmed, prepared, delivered, cancelled), each status with its color.
 
-## Formularios
+## Forms
 
-- Campos obligatorios marcados con `*`.
-- Validación al salir del campo y al enviar; el error aparece debajo del
-  campo y dice cómo corregirlo ("Ingresá un teléfono de 8 dígitos").
-- Nunca se borra lo que el cliente escribió si algo falla.
+- Required fields marked with `*`.
+- Validation when leaving the field and on submit; the error appears under
+  the field and explains how to fix it ("Ingresá un teléfono de 8 dígitos").
+- What the customer typed is never cleared if something fails.
 
-## Responsivo
+## Responsive
 
-| Ancho                 | Productos por fila | Filtros            |
-| --------------------- | ------------------ | ------------------ |
-| Celular (< 640 px)    | 2                  | Chips horizontales |
-| Tableta (640–1024 px) | 3                  | Chips horizontales |
-| Computadora (> 1024)  | 4                  | Columna lateral    |
+| Width                | Products per row | Filters          |
+| -------------------- | ---------------- | ---------------- |
+| Phone (< 640 px)     | 2                | Horizontal chips |
+| Tablet (640–1024 px) | 3                | Horizontal chips |
+| Desktop (> 1024)     | 4                | Side column      |
 
-## Estados
+## States
 
-- **Cargando:** esqueletos con la forma de las tarjetas.
-- **Error de conexión:** "No pudimos cargar los productos. Revisá tu conexión
-  e intentá de nuevo" con botón "Reintentar".
-- **Imagen que no carga:** imagen genérica con el logo.
+- **Loading:** skeletons shaped like the cards.
+- **Connection error:** "No pudimos cargar los productos. Revisá tu conexión
+  e intentá de nuevo" with a "Reintentar" button.
+- **Image fails to load:** generic image with the logo.
 
-## Accesibilidad
+## Accessibility
 
-- Contraste WCAG AA; precios y botones legibles en celular.
-- Imágenes con `alt` con el nombre del producto.
-- El selector de cantidad y el carrito se usan con teclado y lector de
-  pantalla (los botones − / + tienen nombre accesible).
-- Los cambios del carrito se anuncian ("3 productos en el carrito").
+- WCAG AA contrast; prices and buttons readable on phones.
+- Images with an `alt` containing the product name.
+- The quantity selector and the cart work with keyboard and screen readers
+  (the − / + buttons have accessible names).
+- Cart changes are announced ("3 productos en el carrito").
 
-## Pendientes de confirmar
+## Open questions
 
-- Códigos exactos de los colores y logo en alta calidad.
-- Cómo se muestra una promoción en la tarjeta (porcentaje, precio tachado o
-  ambos).
-- Qué datos se piden en el checkout si se confirman las entregas a domicilio.
+- Exact color codes and a high-quality logo.
+- How a promotion is shown on the card (percentage, struck-through price or
+  both).
+- Which data checkout asks for if home delivery is confirmed.
