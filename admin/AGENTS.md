@@ -2,6 +2,26 @@
 
 Panel de administración de Nativa 360. Next.js (App Router) + TypeScript.
 
+## Documentación
+
+Antes de construir una pantalla o una HU, leé [`docs/`](docs/):
+
+- [`docs/requirements.md`](docs/requirements.md): roles, requisitos y reglas
+  de negocio del panel.
+- [`docs/system-design.md`](docs/system-design.md): rutas, estructura de
+  carpetas, datos y permisos en la interfaz.
+- [`docs/ui-spec.md`](docs/ui-spec.md): identidad visual y patrones de
+  pantalla (lista → detalle → formulario).
+- [`docs/epics.md`](docs/epics.md): las épicas del panel (EP-13 a EP-20).
+- [`docs/user-stories.md`](docs/user-stories.md): HU-08 a HU-15 y HU-27 a HU-34, con
+  escenarios Gherkin. Cada escenario es un criterio de aceptación y necesita
+  su test.
+
+La contraparte de cada HU en la API está en
+[`../backend/docs/`](../backend/docs/). El índice de todo el proyecto está en
+el `docs/README.md` del repo central. Si cambia una regla o un escenario,
+actualizá el documento en el mismo PR.
+
 ## Stack
 
 - **Next.js** (App Router) + TypeScript + **Tailwind CSS**.

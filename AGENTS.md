@@ -11,6 +11,40 @@ son copias que se actualizan solas al mergear. Cada carpeta tiene su propio
 | `e-com/`   | Forhall-Labs/nativa-360-e-com   | Next.js         | Vercel          |
 | `landing/` | Forhall-Labs/nativa-360-lading  | Next.js         | Vercel          |
 
+## Documentación funcional (`docs/`)
+
+Antes de implementar cualquier cosa, leé [`docs/README.md`](docs/README.md):
+es el índice que dice qué proyecto resuelve cada parte y qué documento leer
+según la tarea. Cada proyecto tiene su `docs/` con:
+
+- `requirements.md`: requisitos funcionales (MO-xx), reglas de negocio
+  (RN-xx) y no funcionales (RNF-xx) que le aplican.
+- `system-design.md`: arquitectura, rutas o módulos, datos y manejo de
+  errores. El modelo de datos y los endpoints están en
+  [`backend/docs/system-design.md`](backend/docs/system-design.md).
+- `ui-spec.md` (solo `landing`, `e-com` y `admin`): identidad visual y
+  comportamiento de las pantallas.
+- `epics.md`: todas las épicas del proyecto, en formato Connextra.
+- `user-stories.md`: todas las historias de usuario del proyecto, con
+  escenarios Gherkin.
+
+La fuente original es el SRS del proyecto; `docs/` es su versión
+versionada, por proyecto y en inglés.
+
+### Cómo trabajar una HU (personas e IA)
+
+1. Leé la HU en el `user-stories.md` del frontend, su contraparte en
+   `backend/docs/user-stories.md` (mismo código HU-xx) y su épica en
+   `epics.md`.
+2. Revisá `requirements.md`, `system-design.md` y, si hay pantallas,
+   `ui-spec.md` del proyecto.
+3. Cada escenario Gherkin (positivo, negativo, de error y de validación) es
+   un criterio de aceptación: tiene que quedar cubierto por un test.
+4. Si al implementar cambia una regla, un endpoint, una tabla o un
+   escenario, actualizá el documento en el mismo PR.
+5. Si algo no está definido, no lo inventes: revisá las secciones
+   "Open questions" o preguntá antes de decidir.
+
 ## Trunk-based development
 
 Hay **una sola rama de larga vida: `main`** (el trunk). No existen `dev`,
@@ -139,6 +173,8 @@ git subtree pull --prefix=admin https://github.com/Forhall-Labs/nativa-360-admin
 
 - Trabajá siempre en una rama corta desde `main` actualizado; nunca commitees
   en `main` ni crees ramas de larga vida.
+- Antes de implementar una HU, leé su documentación en `docs/` (ver
+  "Documentación funcional") y mantenela al día en el mismo PR.
 - No edites los repos individuales ni sus clones: todo cambio va en la
   carpeta correspondiente de este repo.
 - Corré los checks del proyecto que tocaste (`npm run format:check`, `lint`,
