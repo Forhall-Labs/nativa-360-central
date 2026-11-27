@@ -15,8 +15,6 @@
     inicio y cierre de sesión (HU-34)
 */
 
-const PASSWORD = "nativa360";
-
 const MODULES = [
   { id: "inicio", label: "Inicio", icon: "home", path: "#/" },
   { id: "pedidos", label: "Pedidos", icon: "orders", path: "#/pedidos" },
@@ -492,6 +490,7 @@ function seed() {
         id: 1,
         nombre: "Laura Campos",
         correo: "admin@nativa360.com",
+        clave: "nativa360",
         rol: "administrador",
         estado: "activo",
       },
@@ -499,6 +498,7 @@ function seed() {
         id: 2,
         nombre: "María Solís",
         correo: "maria@nativa360.com",
+        clave: "nativa360",
         rol: "empleado",
         estado: "activo",
       },
@@ -506,6 +506,7 @@ function seed() {
         id: 3,
         nombre: "Santiago Araya",
         correo: "santiago@nativa360.com",
+        clave: "nativa360",
         rol: "propietario",
         estado: "activo",
       },
@@ -513,6 +514,7 @@ function seed() {
         id: 4,
         nombre: "Pedro Rojas",
         correo: "pedro@nativa360.com",
+        clave: "nativa360",
         rol: "empleado",
         estado: "deshabilitado",
       },
@@ -522,7 +524,7 @@ function seed() {
 
 /* ---------- Estado y guardado ---------- */
 
-const STORE_KEY = "n360-panel";
+const STORE_KEY = "n360-panel-v2";
 
 function load() {
   try {
@@ -656,6 +658,23 @@ const optionList = (items, selected) =>
         `<option value="${esc(value)}" ${String(value) === String(selected) ? "selected" : ""}>${esc(label)}</option>`,
     )
     .join("");
+
+function isEmail(value) {
+  const at = value.indexOf("@");
+  if (at < 1 || at !== value.lastIndexOf("@") || /\s/.test(value)) return false;
+  const domain = value.slice(at + 1);
+  const dot = domain.lastIndexOf(".");
+  return dot > 0 && dot < domain.length - 1;
+}
+
+function isWebLink(value) {
+  try {
+    const url = new URL(value);
+    return (url.protocol === "https:" || url.protocol === "http:") && url.hostname.includes(".");
+  } catch {
+    return false;
+  }
+}
 
 /* ---------- Ventanas modales ---------- */
 
@@ -1049,8 +1068,7 @@ const MODALS = {
       `<div class="form-grid">${fld({ name: "inicio", label: "Publicar desde", type: "date", value: values.inicio ?? item.inicio })}${fld({ name: "fin", label: "Hasta", type: "date", required: false, value: values.fin ?? item.fin, error: errors.fin })}</div>`,
     submit: ({ item }, values) => {
       if (!required(values.titulo)) return { titulo: "El título es obligatorio" };
-      if (!/^https?:\/\/\S+\.\S+/.test(values.enlace))
-        return { enlace: "Ingresá un enlace válido" };
+      if (!isWebLink(values.enlace)) return { enlace: "Ingresá un enlace válido" };
       if (values.fin && values.fin <= values.inicio)
         return { fin: "La fecha de fin debe ser posterior al inicio" };
       const data = {
@@ -1135,8 +1153,7 @@ const MODALS = {
       if (!item) {
         const email = String(values.correo).trim().toLowerCase();
         if (!email) return { correo: "El correo es obligatorio" };
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-          return { correo: "Ingresá un correo válido" };
+        if (!isEmail(email)) return { correo: "Ingresá un correo válido" };
         if (db.users.some((user) => user.correo === email))
           return { correo: "Ya existe un usuario con ese correo" };
         db.users.push({
@@ -1760,8 +1777,33 @@ function renderChrome() {
     .join("");
 }
 
+const CONTENT_TABS = ["negocio", "promociones", "eventos", "multimedia"];
+
+/**
+ * Lee la ruta del hash y la traduce a valores conocidos (un módulo de la
+ * lista o un registro existente), para que nada de la dirección termine
+ * tal cual en el HTML.
+ */
 function parseRoute() {
-  return (window.location.hash.replace(/^#\/?/, "") || "").split("/").filter(Boolean);
+  const [rawSection = "", rawId = ""] = window.location.hash.replace(/^#\/?/, "").split("/");
+  const known = MODULES.find((module) => module.id === rawSection)?.id;
+  const section = known ?? (rawSection ? "desconocida" : "");
+  return [section, resolveId(section, rawId)];
+}
+
+function resolveId(section, rawId) {
+  if (!rawId) return undefined;
+  const missing = "no-encontrado";
+  if (section === "pedidos")
+    return db.orders.find((order) => order.codigo === rawId)?.codigo ?? missing;
+  if (section === "productos") {
+    if (rawId === "nuevo") return "nuevo";
+    return String(db.products.find((product) => String(product.id) === rawId)?.id ?? missing);
+  }
+  if (section === "clientes")
+    return String(db.customers.find((customer) => String(customer.id) === rawId)?.id ?? missing);
+  if (section === "contenido") return CONTENT_TABS.find((tab) => tab === rawId) ?? "negocio";
+  return undefined;
 }
 
 let lastRoute = "";
@@ -1770,6 +1812,7 @@ function render() {
   const loggedIn = Boolean(me() && me().estado === "activo");
   $("[data-shell]").hidden = !loggedIn;
   $("[data-login]").hidden = loggedIn;
+  if (loggedIn) $("[data-login]").innerHTML = "";
   if (!loggedIn) {
     $("[data-login]").innerHTML = loginScreen();
     return;
@@ -1847,7 +1890,8 @@ document.addEventListener("click", (event) => {
   }
   if (action === "fill-login") {
     document.getElementById("m-correo").value = target.dataset.email;
-    document.getElementById("m-clave").value = PASSWORD;
+    const demo = db.users.find((user) => user.correo === target.dataset.email);
+    document.getElementById("m-clave").value = demo?.clave ?? "";
   }
   if (action === "order-status") {
     ui.orderStatus = target.dataset.value;
@@ -1966,7 +2010,7 @@ document.addEventListener("submit", (event) => {
       $("[data-login]").innerHTML = loginScreen("Ingresá tu correo y tu contraseña", values.correo);
       return;
     }
-    if (!user || values.clave !== PASSWORD) {
+    if (!user?.clave || values.clave !== user.clave) {
       $("[data-login]").innerHTML = loginScreen("Correo o contraseña incorrectos", values.correo);
       return;
     }
@@ -2042,8 +2086,7 @@ document.addEventListener("submit", (event) => {
       errors.telefono = "Ingresá un teléfono de 8 dígitos";
     if (!required(values.whatsapp)) errors.whatsapp = "El número de WhatsApp es obligatorio";
     ["instagram", "facebook"].forEach((key) => {
-      if (values[key] && !/^https?:\/\/\S+\.\S+/.test(values[key]))
-        errors[key] = "Ingresá un enlace válido";
+      if (values[key] && !isWebLink(values[key])) errors[key] = "Ingresá un enlace válido";
     });
     if (Object.keys(errors).length) {
       ui.businessDraft = { values, errors };

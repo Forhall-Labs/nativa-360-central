@@ -290,7 +290,7 @@ const esc = (value) =>
     (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char],
   );
 
-const colones = (amount) => `₡${String(Math.round(amount)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}`;
+const colones = (amount) => `₡${Math.round(amount).toLocaleString("en-US").replaceAll(",", " ")}`;
 
 const normalize = (text) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
@@ -355,6 +355,17 @@ function emptyState({ iconName, title, text, action = "", error = false }) {
     ${action}
   </section>`;
 }
+
+const BACK_TARGETS = ["checkout", "mis-pedidos"];
+
+/** La búsqueda es texto libre: solo se usa para filtrar y con textContent. */
+const searchFrom = (params) => (params.get("buscar") || "").slice(0, 100);
+/** Solo se acepta una de las categorías conocidas. */
+const categoryFrom = (params) => CATEGORIES.find((name) => name === params.get("categoria")) ?? "";
+/** Número de página entero y positivo. */
+const pageFrom = (params) => Math.max(1, Number.parseInt(params.get("pagina") || "1", 10) || 1);
+/** Solo se vuelve a una de las pantallas conocidas después de ingresar. */
+const backFrom = (params) => BACK_TARGETS.find((target) => target === params.get("volver")) ?? "";
 
 function parseRoute() {
   const raw = window.location.hash.replace(/^#/, "") || "/";
@@ -464,6 +475,11 @@ function productTile(product) {
 }
 
 /* HU-02, HU-03 y HU-22: catálogo con búsqueda, filtros, paginación y promociones */
+/*
+  La búsqueda llega desde la dirección (#/?buscar=…), así que nunca se mete en
+  el HTML: se muestra con textContent en los elementos [data-search-echo]
+  (ver render) y los filtros navegan con botones, sin armar enlaces con ella.
+*/
 function catalogView(params) {
   if (apiDown) {
     return emptyState({
@@ -475,9 +491,9 @@ function catalogView(params) {
     });
   }
 
-  const search = (params.get("buscar") || "").slice(0, 100);
-  const category = params.get("categoria") || "";
-  const page = Number(params.get("pagina") || 1);
+  const search = searchFrom(params);
+  const category = categoryFrom(params);
+  const page = pageFrom(params);
   const term = normalize(search);
 
   const visible = PRODUCTS.filter(isActive);
@@ -490,13 +506,6 @@ function catalogView(params) {
   const shown = matches.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const filtered = Boolean(search || category);
 
-  const linkWith = (changes) => {
-    const next = new URLSearchParams({ buscar: search, categoria: category, ...changes });
-    [...next.keys()].forEach((key) => !next.get(key) && next.delete(key));
-    const query = next.toString();
-    return `#/${query ? `?${query}` : ""}`;
-  };
-
   const chips = [{ name: "", label: "Todos", count: visible.length }]
     .concat(
       CATEGORIES.map((name) => ({
@@ -507,8 +516,8 @@ function catalogView(params) {
     )
     .map(
       (chip) =>
-        `<a class="chip ${chip.name === category ? "chip--on" : ""}" href="${linkWith({ categoria: chip.name, pagina: "" })}"
-          ${chip.name === category ? 'aria-current="true"' : ""}>${esc(chip.label)}<span class="chip__count">${chip.count}</span></a>`,
+        `<button class="chip ${chip.name === category ? "chip--on" : ""}" type="button" data-act="filter" data-category="${esc(chip.name)}"
+          aria-pressed="${chip.name === category}">${esc(chip.label)}<span class="chip__count">${chip.count}</span></button>`,
     )
     .join("");
 
@@ -532,7 +541,9 @@ function catalogView(params) {
   } else if (matches.length === 0) {
     results = emptyState({
       iconName: "search",
-      title: `No encontramos productos para «${esc(search || category)}»`,
+      title: search
+        ? `No encontramos productos para «<span data-search-echo></span>»`
+        : `No hay productos en ${esc(category)}`,
       text: "Probá con otra palabra o revisá la categoría seleccionada.",
       action: `<a class="button button--line" href="#/">Limpiar búsqueda y filtros</a>`,
     });
@@ -541,18 +552,22 @@ function catalogView(params) {
       iconName: "box",
       title: "No hay más productos para mostrar",
       text: "Esta página no existe en el catálogo.",
-      action: `<a class="button button--line" href="${linkWith({ pagina: "" })}">Volver a la primera página</a>`,
+      action: `<button class="button button--line" type="button" data-act="page" data-page="1">Volver a la primera página</button>`,
     });
   } else {
     const pager =
       pages > 1
         ? `<nav class="pager" aria-label="Páginas">${Array.from({ length: pages }, (_, index) => {
             const number = index + 1;
-            return `<a href="${linkWith({ pagina: number === 1 ? "" : String(number) })}" ${number === page ? 'aria-current="page"' : ""}>${number}</a>`;
+            return `<button type="button" data-act="page" data-page="${number}" ${number === page ? 'aria-current="page"' : ""}>${number}</button>`;
           }).join("")}</nav>`
         : "";
     results = `<div class="products">${shown.map(productTile).join("")}</div>${pager}`;
   }
+
+  const title = search
+    ? `Resultados para «<span data-search-echo></span>»`
+    : esc(category || "Todos los productos");
 
   return `${strip}
     <div class="catalog">
@@ -563,7 +578,7 @@ function catalogView(params) {
       <section>
         <div class="results-bar">
           <div>
-            <h1 class="page-title">${search ? `Resultados para «${esc(search)}»` : esc(category || "Todos los productos")}</h1>
+            <h1 class="page-title">${title}</h1>
             <p class="page-sub">${matches.length} ${matches.length === 1 ? "producto" : "productos"}</p>
           </div>
           ${filtered ? `<a class="text-button" href="#/">${icon("close")} Limpiar filtros</a>` : ""}
@@ -878,7 +893,7 @@ function authLayout(title, text, form) {
 
 /* HU-25: ingreso */
 function loginView(params, errors = {}, values = {}) {
-  const back = params.get("volver") || "";
+  const back = backFrom(params);
   return authLayout(
     "Tu bienestar, a un clic.",
     "Ingresá para registrar pedidos y seguir su estado.",
@@ -895,7 +910,7 @@ function loginView(params, errors = {}, values = {}) {
 
 /* HU-24: registro */
 function registerView(params, errors = {}, values = {}) {
-  const back = params.get("volver") || "";
+  const back = backFrom(params);
   return authLayout(
     "Creá tu cuenta en Nativa 360.",
     "Con tu cuenta registrás pedidos en línea y los retirás en la tienda.",
@@ -914,7 +929,13 @@ function registerView(params, errors = {}, values = {}) {
 /* ---------- Validaciones ---------- */
 
 const PHONE_OK = (value) => /^\d{8}$/.test(value.replace(/[\s-]/g, ""));
-const EMAIL_OK = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+function EMAIL_OK(value) {
+  const at = value.indexOf("@");
+  if (at < 1 || at !== value.lastIndexOf("@") || /\s/.test(value)) return false;
+  const domain = value.slice(at + 1);
+  const dot = domain.lastIndexOf(".");
+  return dot > 0 && dot < domain.length - 1;
+}
 
 function validateCheckout(data) {
   const errors = {};
@@ -992,7 +1013,11 @@ function render() {
     });
 
   app.innerHTML = view;
-  document.getElementById("buscar").value = params.get("buscar") || "";
+  const search = searchFrom(params);
+  document.getElementById("buscar").value = search;
+  app.querySelectorAll("[data-search-echo]").forEach((node) => {
+    node.textContent = search;
+  });
 
   if (routeKey !== currentRouteKey) {
     window.scrollTo(0, 0);
@@ -1043,6 +1068,21 @@ app.addEventListener("click", (event) => {
     persist();
     updateHeader();
     render();
+  }
+  if (act === "filter" || act === "page") {
+    const { params } = parseRoute();
+    const next = new URLSearchParams();
+    const search = searchFrom(params);
+    const category =
+      act === "filter"
+        ? CATEGORIES.find((name) => name === target.dataset.category)
+        : categoryFrom(params);
+    const page = act === "page" ? Number.parseInt(target.dataset.page, 10) : 1;
+    if (search) next.set("buscar", search);
+    if (category) next.set("categoria", category);
+    if (page > 1) next.set("pagina", String(page));
+    const query = next.toString();
+    go(`#/${query ? `?${query}` : ""}`);
   }
   if (act === "to-checkout") go("#/checkout");
   if (act === "retry") window.location.reload();
@@ -1139,7 +1179,8 @@ document.querySelector("[data-search-form]").addEventListener("submit", (event) 
   const { params } = parseRoute();
   const next = new URLSearchParams();
   if (term) next.set("buscar", term);
-  if (params.get("categoria")) next.set("categoria", params.get("categoria"));
+  const category = categoryFrom(params);
+  if (category) next.set("categoria", category);
   go(`#/${next.toString() ? `?${next}` : ""}`);
 });
 

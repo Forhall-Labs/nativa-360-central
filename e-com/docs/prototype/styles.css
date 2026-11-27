@@ -676,8 +676,9 @@ main {
   margin-top: 32px;
 }
 
-.pager a {
+.pager button {
   display: grid;
+  cursor: pointer;
   place-items: center;
   min-width: 42px;
   height: 42px;
@@ -689,7 +690,7 @@ main {
   text-decoration: none;
 }
 
-.pager a[aria-current="page"] {
+.pager button[aria-current="page"] {
   background: var(--blue-800);
   border-color: var(--blue-800);
   color: #fff;
