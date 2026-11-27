@@ -301,6 +301,9 @@ const longDate = (iso) =>
     year: "numeric",
   });
 
+/** Compara la categoría de un producto con un nombre de la lista CATEGORIES. */
+const inCategory = (product, name) => product.categoria.localeCompare(name) === 0;
+
 const findProduct = (id) => PRODUCTS.find((product) => product.id === Number(id));
 const isActive = (product) => product && product.activo !== false;
 
@@ -499,7 +502,7 @@ function catalogView(params) {
   const visible = PRODUCTS.filter(isActive);
   const matches = visible.filter(
     (product) =>
-      (!category || product.categoria === category) &&
+      (!category || inCategory(product, category)) &&
       (!term || normalize(`${product.nombre} ${product.resumen}`).includes(term)),
   );
   const pages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
@@ -511,7 +514,7 @@ function catalogView(params) {
       CATEGORIES.map((name) => ({
         name,
         label: name,
-        count: visible.filter((product) => product.categoria === name).length,
+        count: visible.filter((product) => inCategory(product, name)).length,
       })),
     )
     .map(
