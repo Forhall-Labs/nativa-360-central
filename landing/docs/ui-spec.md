@@ -4,6 +4,19 @@ Source: Nativa 360 SRS, sections 2.2.4 (interface standards), 3.8.2.6
 (design constraints), 3.8.3.1 (user interfaces) and 3.8.7.4 (usability and
 accessibility).
 
+## Prototype
+
+Clickable prototype that follows this spec:
+[`prototype/index.html`](prototype/index.html) (HTML, CSS and JS, no build
+step). Open it in a browser by double-clicking the file. It covers HU-01 and
+HU-16 to HU-21 with example data; the "Ver tienda" buttons open the
+[online store prototype](../../e-com/docs/prototype/index.html).
+
+- `?demo=error` at the end of the address simulates the API being down.
+- `?demo=vacio` simulates no featured products, news or doctor visits.
+- Colors are defined once in `:root` of `prototype/styles.css`; replace them
+  with the official brand colors when they are available.
+
 ## Visual identity
 
 Shared by `landing`, `e-com` and `admin`: customers must feel it is the same

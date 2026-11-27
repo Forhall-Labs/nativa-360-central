@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nativa 360 · Macrobiótica en Pérez Zeledón</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!--
+      Prototipo navegable de la landing de Nativa 360.
+      Sigue ../ui-spec.md y cubre HU-01 y HU-16 a HU-21 (../user-stories.md).
+      Los datos son de ejemplo. Estados de demostración: ?demo=error y ?demo=vacio.
+    -->
+    <a class="skip-link" href="#inicio">Saltar al contenido</a>
+
+    <div class="announcement">
+      <div class="announcement__inner container">
+        <span data-icon="leaf"></span>
+        <p>
+          Pedí en línea y retirá en tienda
+          <span class="announcement__extra"> · a 50 m de la Municipalidad de Pérez Zeledón</span>
+        </p>
+      </div>
+    </div>
+
+    <header class="header" data-header>
+      <div class="header__inner container">
+        <a class="logo" href="#inicio" aria-label="Nativa 360, inicio">
+          <span class="logo__mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40">
+              <circle cx="20" cy="20" r="20" fill="currentColor" />
+              <path
+                d="M13 27c0-8 5-14 15-15-1 9-6 15-15 15Zm0 0c3-4 6-7 10-9"
+                fill="none"
+                stroke="#fff"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span class="logo__text">Nativa<span>360</span></span>
+        </a>
+
+        <button
+          class="menu-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="menu"
+          data-menu-toggle
+        >
+          <span class="visually-hidden">Abrir menú</span>
+          <span class="menu-toggle__bar" aria-hidden="true"></span>
+          <span class="menu-toggle__bar" aria-hidden="true"></span>
+          <span class="menu-toggle__bar" aria-hidden="true"></span>
+        </button>
+
+        <nav class="nav" id="menu" aria-label="Secciones">
+          <a href="#destacados">Productos</a>
+          <a href="#novedades" data-section-link="novedades">Novedades</a>
+          <a href="#visitas" data-section-link="visitas">Visitas del doctor</a>
+          <a href="#nosotros">Nosotros</a>
+          <a href="#contacto">Contacto</a>
+          <a class="btn btn--primary" href="#" data-store-link>
+            Ver tienda <span data-icon="arrow"></span>
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- HU-01: presentación · HU-17: WhatsApp · HU-19: ir a la tienda -->
+      <section class="hero" id="inicio">
+        <div class="hero__blob hero__blob--one" aria-hidden="true"></div>
+        <div class="hero__blob hero__blob--two" aria-hidden="true"></div>
+        <div class="hero__inner container">
+          <div class="hero__text">
+            <p class="pill"><span data-icon="leaf"></span> Macrobiótica en Pérez Zeledón</p>
+            <h1 class="hero__title">
+              Bienestar natural, <span class="hero__highlight">cerca de vos</span>.
+            </h1>
+            <p class="hero__description" data-business="descripcion"></p>
+            <div class="hero__actions">
+              <a class="btn btn--primary btn--lg" href="#" data-store-link>
+                Ver tienda <span data-icon="arrow"></span>
+              </a>
+              <a
+                class="btn btn--ghost btn--lg"
+                href="#"
+                target="_blank"
+                rel="noopener"
+                data-whatsapp-link
+              >
+                <span data-icon="chat"></span> Escribinos por WhatsApp
+                <span class="visually-hidden">(abre en otra pestaña)</span>
+              </a>
+            </div>
+            <ul class="trust">
+              <li><span data-icon="sprout"></span> Productos naturales</li>
+              <li><span data-icon="heart"></span> Atención personalizada</li>
+              <li><span data-icon="bag"></span> Retiro en tienda</li>
+            </ul>
+          </div>
+
+          <div class="hero__visual" aria-hidden="true">
+            <div class="hero__circle"></div>
+            <div class="hero__products" data-hero-products></div>
+            <div class="float-card float-card--visit" data-hero-visit hidden>
+              <span class="float-card__icon" data-icon="stethoscope"></span>
+              <div>
+                <p class="float-card__label">Próxima visita del doctor</p>
+                <p class="float-card__value" data-hero-visit-text></p>
+              </div>
+            </div>
+            <div class="float-card float-card--rating">
+              <span class="float-card__icon float-card__icon--green" data-icon="leaf"></span>
+              <div>
+                <p class="float-card__label">Retiro en tienda</p>
+                <p class="float-card__value">sin costo de envío</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Categorías: atajos al catálogo de la tienda -->
+      <section class="categories" aria-label="Categorías">
+        <div class="categories__grid container" data-categories></div>
+      </section>
+
+      <!-- HU-16: productos destacados -->
+      <section class="section" id="destacados" data-section="destacados">
+        <div class="container">
+          <div class="section__head">
+            <div>
+              <p class="section__eyebrow">Lo más pedido</p>
+              <h2 class="section__title">Productos destacados</h2>
+            </div>
+            <a class="link-arrow" href="#" data-store-link>
+              Ver todo el catálogo <span data-icon="arrow"></span>
+            </a>
+          </div>
+          <div class="grid--products grid" data-featured></div>
+        </div>
+      </section>
+
+      <!-- HU-21: promociones y eventos vigentes -->
+      <section class="section section--tinted" id="novedades" data-section="novedades">
+        <div class="container">
+          <div class="section__head">
+            <div>
+              <p class="section__eyebrow">Novedades</p>
+              <h2 class="section__title">Promociones y eventos</h2>
+            </div>
+          </div>
+          <div class="news" data-news></div>
+        </div>
+      </section>
+
+      <!-- HU-20: próximas visitas del doctor -->
+      <section class="section" id="visitas" data-section="visitas">
+        <div class="visits-layout container">
+          <div class="visits-intro">
+            <p class="section__eyebrow">Consultas en tienda</p>
+            <h2 class="section__title">Visitas del doctor</h2>
+            <p class="section__text">
+              Recibimos especialistas en salud natural. Vení a consultarles en la tienda en estas
+              fechas.
+            </p>
+            <a class="btn btn--ghost" href="#" target="_blank" rel="noopener" data-whatsapp-link>
+              <span data-icon="chat"></span> Preguntar por WhatsApp
+              <span class="visually-hidden">(abre en otra pestaña)</span>
+            </a>
+          </div>
+          <ul class="visits" data-visits></ul>
+        </div>
+      </section>
+
+      <!-- Historia y fidelidad (SRS 1.3) · HU-18: redes sociales -->
+      <section class="section section--dark" id="nosotros">
+        <div class="about container">
+          <div class="about__text">
+            <p class="section__eyebrow section__eyebrow--light">Nuestra historia</p>
+            <h2 class="section__title section__title--light">
+              Nacimos para ayudarte a sentirte mejor, de forma natural.
+            </h2>
+            <p>
+              Nativa 360 abrió sus puertas en agosto de 2026 por iniciativa de Santiago Araya
+              Alvarado, con una idea simple: ofrecer productos naturales de calidad y una atención
+              que de verdad escuche lo que cada cliente necesita.
+            </p>
+            <p>
+              Atendemos a adultos mayores, deportistas y a todas las personas que quieren
+              complementar su alimentación y sus hábitos de cuidado diario.
+            </p>
+          </div>
+          <div class="about__cards">
+            <article class="perk">
+              <span class="perk__icon" data-icon="card"></span>
+              <h3>Tarjeta de fidelidad</h3>
+              <p>Sumá sellos con cada compra y obtené beneficios exclusivos en tienda.</p>
+            </article>
+            <article class="perk">
+              <span class="perk__icon" data-icon="gift"></span>
+              <h3>Sorteos y novedades</h3>
+              <p>Seguinos en redes para participar en sorteos y enterarte de lo nuevo.</p>
+              <ul class="social social--light" aria-label="Redes sociales" data-social></ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- HU-01: contacto · HU-17: WhatsApp -->
+      <section class="section" id="contacto">
+        <div class="contact container">
+          <div class="contact__info">
+            <p class="section__eyebrow">Visitanos</p>
+            <h2 class="section__title">Estamos en el centro de San Isidro</h2>
+            <ul class="contact__list">
+              <li>
+                <span class="contact__icon" data-icon="pin"></span>
+                <div>
+                  <p class="contact__label">Dirección</p>
+                  <p data-business="direccion"></p>
+                </div>
+              </li>
+              <li>
+                <span class="contact__icon" data-icon="phone"></span>
+                <div>
+                  <p class="contact__label">Teléfono</p>
+                  <p><a href="#" data-phone-link></a></p>
+                </div>
+              </li>
+            </ul>
+            <div class="hours" data-hours hidden>
+              <div class="hours__head">
+                <span class="contact__icon" data-icon="clock"></span>
+                <p class="contact__label">Horario</p>
+                <span class="status" data-open-status></span>
+              </div>
+              <dl class="hours__list" data-hours-list></dl>
+            </div>
+            <a
+              class="btn btn--primary btn--lg"
+              href="#"
+              target="_blank"
+              rel="noopener"
+              data-whatsapp-link
+            >
+              <span data-icon="chat"></span> Escribinos por WhatsApp
+              <span class="visually-hidden">(abre en otra pestaña)</span>
+            </a>
+          </div>
+
+          <a
+            class="map"
+            href="https://www.google.com/maps/search/?api=1&query=Municipalidad+de+P%C3%A9rez+Zeled%C3%B3n"
+            target="_blank"
+            rel="noopener"
+          >
+            <svg
+              class="map__art"
+              viewBox="0 0 400 320"
+              preserveAspectRatio="xMidYMid slice"
+              aria-hidden="true"
+            >
+              <rect width="400" height="320" fill="#eaf2fb" />
+              <path d="M0 210 400 150" stroke="#fff" stroke-width="26" />
+              <path d="M150 0 200 320" stroke="#fff" stroke-width="22" />
+              <path d="M0 80 400 60" stroke="#fff" stroke-width="12" />
+              <path d="M300 0 330 320" stroke="#fff" stroke-width="12" />
+              <path d="M40 0 70 320" stroke="#fff" stroke-width="10" />
+              <rect x="215" y="70" width="70" height="60" rx="8" fill="#d6e5f5" />
+              <rect x="80" y="230" width="60" height="70" rx="8" fill="#d6e5f5" />
+              <circle cx="95" cy="130" r="38" fill="#cfe9d8" />
+              <rect x="215" y="200" width="80" height="80" rx="8" fill="#d6e5f5" />
+              <text x="228" y="105" font-size="11" fill="#5b7499">Municipalidad</text>
+            </svg>
+            <span class="map__pin">
+              <span data-icon="pin"></span>
+            </span>
+            <span class="map__label">
+              Nativa 360 · Ver en Google Maps <span data-icon="external"></span>
+              <span class="visually-hidden">(abre en otra pestaña)</span>
+            </span>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__grid container">
+        <div class="footer__brand">
+          <a class="logo logo--light" href="#inicio" aria-label="Nativa 360, inicio">
+            <span class="logo__mark" aria-hidden="true">
+              <svg viewBox="0 0 40 40">
+                <circle cx="20" cy="20" r="20" fill="currentColor" />
+                <path
+                  d="M13 27c0-8 5-14 15-15-1 9-6 15-15 15Zm0 0c3-4 6-7 10-9"
+                  fill="none"
+                  stroke="#163b6e"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+            <span class="logo__text">Nativa<span>360</span></span>
+          </a>
+          <p>Macrobiótica en Pérez Zeledón. Productos naturales para tu bienestar diario.</p>
+        </div>
+        <div>
+          <h3 class="footer__title">Tienda</h3>
+          <ul class="footer__links">
+            <li><a href="#" data-store-link>Catálogo completo</a></li>
+            <li><a href="#destacados">Destacados</a></li>
+            <li><a href="#novedades">Promociones</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="footer__title">Contacto</h3>
+          <ul class="footer__links">
+            <li data-business="direccion"></li>
+            <li><a href="#" data-phone-link></a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="footer__title">Seguinos</h3>
+          <ul class="social social--light" aria-label="Redes sociales" data-social></ul>
+        </div>
+      </div>
+      <div class="footer__bottom container">
+        <p>© <span data-year></span> Nativa 360. Todos los derechos reservados.</p>
+      </div>
+    </footer>
+
+    <!-- HU-17: botón fijo de WhatsApp en celular -->
+    <a
+      class="whatsapp-float"
+      href="#"
+      target="_blank"
+      rel="noopener"
+      aria-label="Escribinos por WhatsApp (abre en otra pestaña)"
+      data-whatsapp-link
+    >
+      <span data-icon="chat"></span>
+    </a>
+
+    <script src="app.js"></script>
+  </body>
+</html>

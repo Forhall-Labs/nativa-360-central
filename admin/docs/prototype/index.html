@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Panel · Nativa 360</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!--
+      Prototipo navegable del panel de administración de Nativa 360.
+      Sigue ../ui-spec.md y cubre HU-08 a HU-15 y HU-27 a HU-34 (../user-stories.md).
+      Cuentas de prueba (contraseña nativa360):
+        admin@nativa360.com     Administrador
+        maria@nativa360.com     Empleada
+        santiago@nativa360.com  Propietario sin permisos administrativos
+        pedro@nativa360.com     Cuenta deshabilitada
+      Los datos son de ejemplo y se guardan en el navegador.
+    -->
+    <svg class="sprite" aria-hidden="true">
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9H3zM9 20v-6h6v6" /></symbol>
+      <symbol id="i-orders" viewBox="0 0 24 24">
+        <path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3" />
+      </symbol>
+      <symbol id="i-box" viewBox="0 0 24 24">
+        <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9" />
+      </symbol>
+      <symbol id="i-tag" viewBox="0 0 24 24">
+        <path d="M3 12V4h8l10 10-8 8zM7.5 8.5h.01" />
+      </symbol>
+      <symbol id="i-stack" viewBox="0 0 24 24">
+        <path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5M3 17l9 5 9-5" />
+      </symbol>
+      <symbol id="i-users" viewBox="0 0 24 24">
+        <path
+          d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7M22 21a7 7 0 0 0-4-6.3"
+        />
+      </symbol>
+      <symbol id="i-megaphone" viewBox="0 0 24 24">
+        <path d="M3 10v4h4l9 5V5L7 10zM19 9a4 4 0 0 1 0 6" />
+      </symbol>
+      <symbol id="i-steth" viewBox="0 0 24 24">
+        <path
+          d="M5 3H4v6a5 5 0 0 0 10 0V3h-1M9 14v1a5 5 0 0 0 10 0v-3M19 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"
+        />
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6zM9 12l2 2 4-4" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <path d="M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zM20 20l-4-4" />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+      <symbol id="i-edit" viewBox="0 0 24 24">
+        <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10" /></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <path d="M12 3 2 20h20zM12 10v4M12 17h.01" />
+      </symbol>
+      <symbol id="i-logout" viewBox="0 0 24 24">
+        <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" />
+      </symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24">
+        <path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4" />
+      </symbol>
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" /></symbol>
+      <symbol id="i-next" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></symbol>
+      <symbol id="i-money" viewBox="0 0 24 24">
+        <path d="M3 6h18v12H3zM12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM6 9v.01M18 15v.01" />
+      </symbol>
+      <symbol id="i-percent" viewBox="0 0 24 24">
+        <path d="M19 5 5 19M7 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM17 15a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
+      </symbol>
+      <symbol id="i-ban" viewBox="0 0 24 24">
+        <path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM5.6 5.6l12.8 12.8" />
+      </symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24">
+        <path
+          d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM16 2v4M8 2v4M3 10h18"
+        />
+      </symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></symbol>
+      <symbol id="i-trend" viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8M15 7h6v6" /></symbol>
+      <symbol id="i-leaf" viewBox="0 0 24 24">
+        <path d="M5 20c0-9 6-15 15-16-1 10-7 16-15 16zm0 0c3-4 6-7 10-9" />
+      </symbol>
+
+      <symbol id="art-frasco" viewBox="0 0 120 160">
+        <rect x="34" y="8" width="52" height="22" rx="6" fill="#1b2b44" />
+        <rect x="22" y="30" width="76" height="122" rx="20" fill="var(--art)" />
+        <rect x="22" y="66" width="76" height="58" rx="6" fill="#fff" />
+      </symbol>
+      <symbol id="art-bolsa" viewBox="0 0 120 160">
+        <path d="M26 18h68l8 128a8 8 0 0 1-8 8H26a8 8 0 0 1-8-8z" fill="var(--art)" />
+        <rect x="24" y="62" width="72" height="62" rx="6" fill="#fff" />
+      </symbol>
+      <symbol id="art-caja" viewBox="0 0 120 160">
+        <path d="M24 40 44 22h68L92 40z" fill="var(--art)" opacity=".7" />
+        <path d="m92 40 20-18v112l-20 18z" fill="var(--art)" opacity=".85" />
+        <rect x="24" y="40" width="68" height="112" rx="4" fill="var(--art)" />
+        <rect x="30" y="70" width="56" height="56" rx="6" fill="#fff" />
+      </symbol>
+      <symbol id="art-gotero" viewBox="0 0 120 160">
+        <rect x="48" y="4" width="24" height="26" rx="10" fill="#1b2b44" />
+        <rect x="28" y="42" width="64" height="110" rx="18" fill="var(--art)" />
+        <rect x="28" y="72" width="64" height="54" rx="6" fill="#fff" />
+      </symbol>
+      <symbol id="art-tubo" viewBox="0 0 120 160">
+        <rect x="44" y="124" width="32" height="28" rx="4" fill="#1b2b44" />
+        <path d="M30 10h60l-8 116H38z" fill="var(--art)" />
+        <rect x="38" y="48" width="44" height="52" rx="6" fill="#fff" />
+      </symbol>
+    </svg>
+
+    <div class="shell" data-shell>
+      <aside class="side" data-side>
+        <a class="side__brand" href="#/" aria-label="Nativa 360, inicio del panel">
+          <span class="side__mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40">
+              <circle cx="20" cy="20" r="20" fill="#fff" />
+              <path
+                d="M13 27c0-8 5-14 15-15-1 9-6 15-15 15Zm0 0c3-4 6-7 10-9"
+                fill="none"
+                stroke="#163b6e"
+                stroke-width="2.2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+          <span>Nativa<b>360</b></span>
+        </a>
+        <p class="side__label">Panel de gestión</p>
+        <nav class="side__nav" aria-label="Módulos" data-nav></nav>
+        <div class="side__foot" data-side-foot></div>
+      </aside>
+
+      <div class="workspace">
+        <header class="bar">
+          <button class="bar__menu" type="button" data-do="menu" aria-label="Abrir menú">
+            <svg class="ic"><use href="#i-menu" /></svg>
+          </button>
+          <div class="bar__demo">
+            <label for="ver-como">Ver como</label>
+            <select id="ver-como" data-role-switch></select>
+          </div>
+          <div class="bar__user" data-user></div>
+        </header>
+        <main class="content" id="contenido" tabindex="-1" data-view></main>
+      </div>
+    </div>
+
+    <div class="login" data-login hidden></div>
+
+    <dialog class="modal" data-modal></dialog>
+    <div class="toast" role="status" aria-live="polite" data-toast hidden></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

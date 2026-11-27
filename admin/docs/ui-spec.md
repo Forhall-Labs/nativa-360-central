@@ -4,6 +4,24 @@ Source: Nativa 360 SRS, sections 2.2.4 (interface standards), 3.8.2.6
 (design constraints), 3.8.3.1 (user interfaces) and 3.8.7.4 (usability and
 accessibility).
 
+## Prototype
+
+Clickable prototype that follows this spec:
+[`prototype/index.html`](prototype/index.html) (HTML, CSS and JS, no build
+step). Open it in a browser by double-clicking the file. It covers HU-08 to
+HU-15 and HU-27 to HU-34: sign in, home, orders (status, payment, discount and
+cancellation), products and images, categories, inventory, customers, site
+content, doctor visits and users.
+
+- Test accounts (password `nativa360`): `admin@nativa360.com`
+  (administrator), `maria@nativa360.com` (employee),
+  `santiago@nativa360.com` (owner without admin permissions) and
+  `pedro@nativa360.com` (disabled account).
+- The "Ver como" selector in the top bar switches roles to show the
+  permissions of each one.
+- Data is kept in the browser; "Restablecer datos" in the side menu restores
+  the example data.
+
 ## Visual identity
 
 Shared by `landing`, `e-com` and `admin`.
