@@ -4,6 +4,20 @@ Source: Nativa 360 SRS, sections 2.2.4 (interface standards), 3.8.2.6
 (design constraints), 3.8.3.1 (user interfaces) and 3.8.7.4 (usability and
 accessibility).
 
+## Prototype
+
+Clickable prototype that follows this spec:
+[`prototype/index.html`](prototype/index.html) (HTML, CSS and JS, no build
+step). Open it in a browser by double-clicking the file. It covers HU-02 to
+HU-07 and HU-22 to HU-26: catalog, search and filters, product details, cart,
+sign in and sign up, checkout with pickup or delivery, placed order with the
+WhatsApp message, and my orders.
+
+- Test account: `ana@correo.com`, password `nativa360`.
+- The cart, session and orders are kept in the browser; use a private window
+  to start from scratch.
+- `?demo=error` before the `#` simulates the API being down.
+
 ## Visual identity
 
 Shared by `landing`, `e-com` and `admin`: customers must feel it is the same
